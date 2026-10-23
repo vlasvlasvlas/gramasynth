@@ -1,0 +1,322 @@
+/**
+ * Gramasynth ROLLITO — Main Application Controller
+ */
+
+import { Pattern, TEMPLATES } from './core/pattern.js';
+import { AudioEngine } from './audio/audio_engine.js';
+import { StateMachine, EngineState } from './core/state_machine.js';
+import { CameraManager } from './vision/camera.js';
+import { HomographyTransformer } from './vision/homography.js';
+import { GridDetector } from './vision/grid_detector.js';
+import { SequencerView } from './ui/sequencer_view.js';
+
+class App {
+  constructor() {
+    // DOM Elements
+    this.video = document.getElementById('webcam');
+    this.pinCanvas = document.getElementById('pinCanvas');
+    this.rectifiedCanvas = document.getElementById('rectifiedCanvas');
+    this.sequencerCanvas = document.getElementById('sequencerCanvas');
+
+    this.statusBadge = document.getElementById('statusBadge');
+    this.confidenceMeter = document.getElementById('confidenceMeter');
+    this.cameraSelect = document.getElementById('cameraSelect');
+
+    this.btnCamera = document.getElementById('btnCamera');
+    this.btnMirror = document.getElementById('btnMirror');
+    this.btnCapture = document.getElementById('btnCapture');
+    this.btnPlay = document.getElementById('btnPlay');
+    this.btnAccept = document.getElementById('btnAccept');
+    this.btnDiscard = document.getElementById('btnDiscard');
+    this.btnLoadTemplate = document.getElementById('btnLoadTemplate');
+    this.templateSelect = document.getElementById('templateSelect');
+
+    this.thresholdSlider = document.getElementById('thresholdSlider');
+    this.thresholdVal = document.getElementById('thresholdVal');
+    this.bpmSlider = document.getElementById('bpmSlider');
+    this.bpmVal = document.getElementById('bpmVal');
+
+    // Auxiliary canvas for raw webcam frames
+    this.rawCanvas = document.createElement('canvas');
+
+    // Modules
+    this.audioEngine = new AudioEngine();
+    this.stateMachine = new StateMachine(this.audioEngine);
+    this.cameraManager = new CameraManager(this.video);
+    this.gridDetector = new GridDetector(this.rectifiedCanvas);
+
+    // 4 Corner Pins para la homografía interactiva (normalizados 0..1)
+    this.cornerPins = [
+      { x: 0.20, y: 0.25 }, // Top-Left
+      { x: 0.80, y: 0.25 }, // Top-Right
+      { x: 0.85, y: 0.80 }, // Bottom-Right
+      { x: 0.15, y: 0.80 }  // Bottom-Left
+    ];
+    this.draggedPin = null;
+
+    // Inicializar Sequencer View
+    this.sequencerView = new SequencerView(this.sequencerCanvas, (r, c) => {
+      this.stateMachine.editCell(r, c, this.stateMachine.previewPattern ? 'preview' : 'active');
+    });
+
+    this.init();
+  }
+
+  async init() {
+    // Patrón inicial
+    const initialPattern = TEMPLATES.template_01();
+    this.stateMachine.activePattern = initialPattern;
+    this.sequencerView.update(initialPattern, null, null, -1);
+
+    // Audio Step Callback
+    this.audioEngine.onStepChange = (step) => {
+      this.sequencerView.update(
+        this.stateMachine.activePattern,
+        this.stateMachine.previewPattern,
+        this.stateMachine.pendingPattern,
+        step
+      );
+    };
+
+    // FSM State Listener
+    this.stateMachine.subscribe((fsm) => this.handleStateChange(fsm));
+
+    this.setupUIEvents();
+    this.setupPinCanvasEvents();
+    this.setupKeyboardShortcuts();
+    this.populateCameraDevices();
+
+    // Loop de render de video y homografía en tiempo real
+    requestAnimationFrame(() => this.videoProcessingLoop());
+  }
+
+  handleStateChange(fsm) {
+    this.statusBadge.textContent = fsm.state;
+    this.statusBadge.className = `status-badge status-${fsm.state.toLowerCase()}`;
+
+    this.btnAccept.disabled = !fsm.preview;
+    this.btnDiscard.disabled = !fsm.preview;
+
+    this.sequencerView.update(
+      fsm.active,
+      fsm.preview,
+      fsm.pending,
+      this.audioEngine.currentStep
+    );
+  }
+
+  setupUIEvents() {
+    // Cámara
+    this.btnCamera.addEventListener('click', async () => {
+      if (this.cameraManager.stream) {
+        this.cameraManager.stop();
+        this.btnCamera.textContent = 'Activar Cámara';
+      } else {
+        await this.cameraManager.start(this.cameraSelect.value || null);
+        this.btnCamera.textContent = 'Desactivar Cámara';
+      }
+    });
+
+    this.btnMirror.addEventListener('click', () => {
+      this.cameraManager.toggleMirror();
+    });
+
+    this.cameraSelect.addEventListener('change', async () => {
+      if (this.cameraManager.stream) {
+        await this.cameraManager.start(this.cameraSelect.value || null);
+      }
+    });
+
+    // Audio Transport
+    this.btnPlay.addEventListener('click', () => {
+      if (this.audioEngine.isRunning) {
+        this.stateMachine.stop();
+        this.btnPlay.textContent = '▶ Iniciar Audio';
+        this.btnPlay.className = 'btn btn-primary';
+      } else {
+        this.stateMachine.start(this.stateMachine.activePattern || TEMPLATES.template_01());
+        this.btnPlay.textContent = '⏹ Detener';
+        this.btnPlay.className = 'btn btn-action';
+      }
+    });
+
+    // Capturar a Preview
+    this.btnCapture.addEventListener('click', () => {
+      this.captureToPreview();
+    });
+
+    // Aceptar candidato
+    this.btnAccept.addEventListener('click', () => {
+      this.stateMachine.acceptCandidate();
+    });
+
+    // Descartar candidato
+    this.btnDiscard.addEventListener('click', () => {
+      this.stateMachine.discardCandidate();
+    });
+
+    // Cargar plantilla digital
+    this.btnLoadTemplate.addEventListener('click', () => {
+      const templateFn = TEMPLATES[this.templateSelect.value];
+      if (templateFn) {
+        const pattern = templateFn();
+        this.stateMachine.setPreview(pattern);
+      }
+    });
+
+    // Sliders
+    this.thresholdSlider.addEventListener('input', (e) => {
+      this.thresholdVal.textContent = e.target.value;
+    });
+
+    this.bpmSlider.addEventListener('input', (e) => {
+      const bpm = parseInt(e.target.value, 10);
+      this.bpmVal.textContent = bpm;
+      this.stateMachine.setBpm(bpm);
+    });
+  }
+
+  setupKeyboardShortcuts() {
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (this.stateMachine.previewPattern) {
+          this.stateMachine.acceptCandidate();
+        } else {
+          this.captureToPreview();
+        }
+      } else if (e.code === 'Escape') {
+        e.preventDefault();
+        this.stateMachine.discardCandidate();
+      }
+    });
+  }
+
+  captureToPreview() {
+    const threshold = parseInt(this.thresholdSlider.value, 10);
+    const result = this.gridDetector.detectPattern(threshold);
+
+    this.confidenceMeter.textContent = `Confianza: ${Math.round(result.confidence * 100)}% (${result.activeCellCount} notas)`;
+    this.confidenceMeter.style.color = result.isAcceptable ? '#10b981' : '#f59e0b';
+
+    this.stateMachine.setPreview(result.pattern);
+  }
+
+  setupPinCanvasEvents() {
+    const resizePins = () => {
+      this.pinCanvas.width = this.pinCanvas.clientWidth;
+      this.pinCanvas.height = this.pinCanvas.clientHeight;
+      this.drawPins();
+    };
+    window.addEventListener('resize', resizePins);
+    setTimeout(resizePins, 200);
+
+    const getMousePos = (e) => {
+      const rect = this.pinCanvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) / rect.width,
+        y: (e.clientY - rect.top) / rect.height
+      };
+    };
+
+    this.pinCanvas.addEventListener('mousedown', (e) => {
+      const pos = getMousePos(e);
+      let closestIdx = -1;
+      let minDist = 0.08;
+
+      this.cornerPins.forEach((p, idx) => {
+        const d = Math.hypot(p.x - pos.x, p.y - pos.y);
+        if (d < minDist) {
+          minDist = d;
+          closestIdx = idx;
+        }
+      });
+
+      if (closestIdx !== -1) {
+        this.draggedPin = closestIdx;
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (this.draggedPin === null) return;
+      const pos = getMousePos(e);
+      this.cornerPins[this.draggedPin].x = Math.max(0.02, Math.min(0.98, pos.x));
+      this.cornerPins[this.draggedPin].y = Math.max(0.02, Math.min(0.98, pos.y));
+      this.drawPins();
+    });
+
+    window.addEventListener('mouseup', () => {
+      this.draggedPin = null;
+    });
+  }
+
+  drawPins() {
+    const w = this.pinCanvas.width;
+    const h = this.pinCanvas.height;
+    const ctx = this.pinCanvas.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+
+    const points = this.cornerPins.map(p => ({ x: p.x * w, y: p.y * h }));
+
+    // Polígono de delimitación
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < 4; i++) ctx.lineTo(points[i].x, points[i].y);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Dibujar los 4 pines de esquina
+    const colors = ['#10b981', '#38bdf8', '#f59e0b', '#ec4899'];
+    points.forEach((p, i) => {
+      ctx.fillStyle = colors[i];
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    });
+  }
+
+  videoProcessingLoop() {
+    if (this.cameraManager.stream && this.video.readyState >= 2) {
+      const frameData = this.cameraManager.captureFrame(this.rawCanvas);
+      if (frameData) {
+        // Puntos de esquina escalados a las dimensiones del frame crudo
+        const srcPoints = this.cornerPins.map(p => ({
+          x: p.x * frameData.width,
+          y: p.y * frameData.height
+        }));
+
+        // Rectificación proyectiva continua hacia rectifiedCanvas
+        HomographyTransformer.warpPerspective(frameData, this.rectifiedCanvas, srcPoints);
+      }
+    }
+
+    requestAnimationFrame(() => this.videoProcessingLoop());
+  }
+
+  async populateCameraDevices() {
+    try {
+      const devices = await this.cameraManager.getDevices();
+      this.cameraSelect.innerHTML = '<option value="">Predeterminada</option>';
+      devices.forEach((d, idx) => {
+        const opt = document.createElement('option');
+        opt.value = d.deviceId;
+        opt.textContent = d.label || `Cámara ${idx + 1}`;
+        this.cameraSelect.appendChild(opt);
+      });
+    } catch (e) {
+      console.warn('No se pudieron enumerar dispositivos:', e);
+    }
+  }
+}
+
+// Iniciar aplicación al cargar el DOM
+window.addEventListener('DOMContentLoaded', () => {
+  new App();
+});

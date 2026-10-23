@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gramasynth ROLLITO — Interfaz Físico-Digital</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <h1>ROLLITO</h1>
+      <span>v0.2 Ecosistema POSNETES</span>
+    </div>
+
+    <div class="top-actions">
+      <span id="statusBadge" class="status-badge status-idle">IDLE</span>
+      <a href="../physical/print.html" target="_blank" class="btn" style="text-decoration:none;">
+        🖨️ Plantilla Imprimible (A4)
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <!-- PANEL 1: CÁMARA & RECTIFICACIÓN ÓPTICA -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>📹 Cámara & Encuadre Óptico</h2>
+        <div class="control-group">
+          <button id="btnMirror" class="btn">⇄ Espejo</button>
+          <button id="btnCamera" class="btn btn-primary">Activar Cámara</button>
+        </div>
+      </div>
+
+      <div class="camera-viewport">
+        <video id="webcam" playsinline autoplay muted></video>
+        <!-- Canvas superpuesto para los 4 marcadores interactivos de esquina -->
+        <canvas id="pinCanvas" class="corner-pin-canvas"></canvas>
+      </div>
+
+      <div class="controls-bar">
+        <div class="control-group">
+          <label>Cámara:</label>
+          <select id="cameraSelect">
+            <option value="">Predeterminada</option>
+          </select>
+        </div>
+        <p style="font-size: 0.75rem; color: #94a3b8;">
+          Arrastra los 4 círculos de colores para calzar el bloque del rollito.
+        </p>
+      </div>
+    </div>
+
+    <!-- PANEL 2: RECTIFICACIÓN POR HOMOGRAFÍA & UMBRAL -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>🔬 Rectificación (Homografía) & Visión</h2>
+        <div id="confidenceMeter" style="font-size: 0.85rem; font-weight: bold; color: #10b981;">
+          Confianza: 100%
+        </div>
+      </div>
+
+      <!-- Canvas de 480x240 px (aspecto 2:1 correspondiente a los 96x48 mm útiles) -->
+      <canvas id="rectifiedCanvas" class="rectified-canvas" width="480" height="240"></canvas>
+
+      <div class="controls-bar">
+        <div class="control-group">
+          <label>Umbral Tinta:</label>
+          <input type="range" id="thresholdSlider" min="40" max="220" value="125">
+          <span id="thresholdVal">125</span>
+        </div>
+        <button id="btnCapture" class="btn btn-primary">
+          📸 Capturar a PREVIEW
+        </button>
+      </div>
+    </div>
+
+    <!-- PANEL 3: SECUENCIADOR 16x8 INTERACTIVO & TRANSPORTE -->
+    <div class="panel sequencer-panel">
+      <div class="panel-header">
+        <h2>🎹 Secuenciador Musical (16 Pasos × 8 Notas)</h2>
+        <div class="control-group">
+          <button id="btnPlay" class="btn btn-primary">▶ Iniciar Audio</button>
+          <button id="btnAccept" class="btn btn-accept" disabled>
+            ✓ Aceptar a PENDING <span class="badge-key">ESPACIO</span>
+          </button>
+          <button id="btnDiscard" class="btn btn-action" disabled>
+            ✕ Descartar <span class="badge-key">ESC</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Canvas de alta resolución 960x280 px -->
+      <canvas id="sequencerCanvas" class="sequencer-canvas" width="960" height="280"></canvas>
+
+      <div class="controls-bar">
+        <div class="control-group">
+          <label>BPM:</label>
+          <input type="range" id="bpmSlider" min="50" max="180" value="110">
+          <span id="bpmVal">110</span>
+        </div>
+
+        <div class="control-group">
+          <label>Plantilla Digital:</label>
+          <select id="templateSelect">
+            <option value="template_01">B1: 4-on-the-floor</option>
+            <option value="template_02">B2: Síncopa & Arp</option>
+            <option value="template_03">B3: Ambient Pads</option>
+            <option value="template_04">B4: Electro Acid</option>
+            <option value="template_05">B5: Polirritmia 3/4</option>
+          </select>
+          <button id="btnLoadTemplate" class="btn">Cargar</button>
+        </div>
+
+        <div style="margin-left: auto; font-size: 0.8rem; color: #94a3b8; display: flex; gap: 16px;">
+          <span><strong style="color: #00f0ff;">■ ACTIVE</strong> (Sonando)</span>
+          <span><strong style="color: #ec4899;">□ PENDING</strong> (Próximo compás)</span>
+          <span><strong style="color: #f59e0b;">◌ PREVIEW</strong> (Candidato congelado)</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
