@@ -36,6 +36,7 @@ class App {
 
     this.btnCapture = document.getElementById('btnCapture');
     this.btnLiveMode = document.getElementById('btnLiveMode');
+    this.btnInvert = document.getElementById('btnInvert');
     this.btnAutoThreshold = document.getElementById('btnAutoThreshold');
     this.rootNoteSelect = document.getElementById('rootNoteSelect');
     this.btnPlay = document.getElementById('btnPlay');
@@ -68,8 +69,9 @@ class App {
 
     // Patrón detectado en vivo (último frame analizado)
     this.liveDetectedPattern = null;
-    this.liveModePending = null;   // patrón esperando ser aplicado en el próximo compás
+    this.liveModePending = null;
     this.isLiveModeOn = false;
+    this.isInverted = false;
     this.frameCount = 0;
 
     // 4 Corner Pins para la homografía interactiva (normalizados 0..1)
@@ -191,6 +193,15 @@ class App {
       this.drawPins();
       this.cornerDetectStatus.textContent = this.cameraManager.isFlippedV ? "⇅ Ritmo arriba / Melodía abajo" : "⇅ Melodía arriba / Ritmo abajo";
     });
+
+    // Invertir colores (positivo/negativo)
+    if (this.btnInvert) {
+      this.btnInvert.addEventListener('click', () => {
+        this.isInverted = !this.isInverted;
+        this.btnInvert.classList.toggle('btn-primary', this.isInverted);
+        this.btnInvert.textContent = this.isInverted ? '⬜ Normal' : '⬛ Invertir';
+      });
+    }
 
     // Auto-ajuste de esquinas
     this.btnAutoCorner.addEventListener('click', () => {
@@ -651,11 +662,12 @@ class App {
         }));
         HomographyTransformer.warpPerspective(frameData, this.warpCanvas, srcPoints);
 
-        // 2. Aplicar Brillo y Contraste hacia rectifiedCanvas
+        // 2. Aplicar Brillo, Contraste e Inversión hacia rectifiedCanvas
         const rCtx = this.rectifiedCanvas.getContext('2d');
         const brightness = this.brightnessSlider.value;
         const contrast = this.contrastSlider.value;
-        rCtx.filter = `brightness(${brightness}%) contrast(${contrast}%)`;
+        const invertStr = this.isInverted ? ' invert(100%)' : '';
+        rCtx.filter = `brightness(${brightness}%) contrast(${contrast}%)${invertStr}`;
         rCtx.drawImage(this.warpCanvas, 0, 0);
         rCtx.filter = 'none';
 
