@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>POSNETES — Impresora Térmica Rollito</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+    }
+    header {
+      text-align: center;
+      margin-top: 8px;
+    }
+    h1 {
+      font-size: 1.4rem;
+      letter-spacing: 1px;
+      color: #38bdf8;
+    }
+    p.subtitle {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    .button-container {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin: auto 0;
+    }
+
+    /* 2 BOTONES GIGANTES TOUCH */
+    .btn-pos {
+      width: 100%;
+      height: 120px;
+      border: none;
+      border-radius: 16px;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .btn-pos:active {
+      transform: scale(0.97);
+      opacity: 0.9;
+    }
+
+    .btn-random {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      border: 2px solid #38bdf8;
+    }
+    .btn-empty {
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      border: 2px solid #34d399;
+    }
+
+    .btn-subtext {
+      font-size: 0.82rem;
+      font-weight: 500;
+      opacity: 0.85;
+      letter-spacing: 0.5px;
+    }
+
+    .preview-box {
+      width: 100%;
+      max-width: 420px;
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border: 1px solid #334155;
+    }
+    .preview-box span {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    canvas#thermalCanvas {
+      width: 100%;
+      max-width: 384px;
+      height: auto;
+      border: 2px solid #000;
+      background: #fff;
+      image-rendering: pixelated;
+    }
+
+    footer {
+      font-size: 0.75rem;
+      color: #64748b;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    footer a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+
+    /* Modal o toast de estado */
+    #statusToast {
+      position: fixed;
+      bottom: 24px;
+      background: #0284c7;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 9999px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>POSNETES — ROLLITO PRINT</h1>
+    <p class="subtitle">Impresión térmica directa para Android 6 con RawBT</p>
+  </header>
+
+  <div class="button-container">
+    <!-- BOTÓN 1: PATRÓN ALEATORIO / TEMPLATE -->
+    <button class="btn-pos btn-random" id="btnPrintRandom">
+      <span>🎲 PATRÓN ALEATORIO</span>
+      <span class="btn-subtext">Imprime música lista para sonar en el rollito</span>
+    </button>
+
+    <!-- BOTÓN 2: CAJÓN VACÍO PARA DIBUJAR -->
+    <button class="btn-pos btn-empty" id="btnPrintEmpty">
+      <span>✍️ CAJÓN VACÍO</span>
+      <span class="btn-subtext">Imprime cuadrícula y esquinas para dibujar a mano</span>
+    </button>
+  </div>
+
+  <div class="preview-box">
+    <span>Vista previa térmica (58 mm / 384 px)</span>
+    <!-- Canvas que dibuja el bloque térmico en 384x240 px (ancho exacto papel 58mm) -->
+    <canvas id="thermalCanvas" width="384" height="240"></canvas>
+  </div>
+
+  <footer>
+    Gramasynth POSNETES • Compatible con RawBT Print Service
+  </footer>
+
+  <div id="statusToast">Enviando a RawBT...</div>
+
+  <script>
+    const canvas = document.getElementById('thermalCanvas');
+    const ctx = canvas.getContext('2d');
+    const statusToast = document.getElementById('statusToast');
+
+    function showToast(msg) {
+      statusToast.textContent = msg;
+      statusToast.style.display = 'block';
+      setTimeout(() => {
+        statusToast.style.display = 'none';
+      }, 2500);
+    }
+
+    // Dibujar bloque térmico (384 px de ancho x 240 px de alto)
+    // 384 px a 203 DPI = ~48 mm útiles de impresión en rollo de 58 mm
+    function drawThermalBlock(isRandom = false) {
+      const w = canvas.width;  // 384 px
+      const h = canvas.height; // 240 px
+
+      // Fondo blanco térmico
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, w, h);
+
+      // Borde exterior negro punteado de corte
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(6, 6, w - 12, h - 12);
+
+      // 4 MARCADORES ÓPTICOS EN LAS ESQUINAS (cuadrados negros sólidos de 24x24 px = ~3mm)
+      ctx.fillStyle = '#000000';
+      const mSize = 24;
+      ctx.fillRect(8, 8, mSize, mSize);                     // Top-Left
+      ctx.fillRect(w - 8 - mSize, 8, mSize, mSize);          // Top-Right
+      ctx.fillRect(8, h - 8 - mSize, mSize, mSize);          // Bottom-Left
+      ctx.fillRect(w - 8 - mSize, h - 8 - mSize, mSize, mSize);// Bottom-Right
+
+      // Línea divisoria central Y = 120 (30 mm Melodía, 30 mm Ritmo)
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(8, h / 2);
+      ctx.lineTo(w - 8, h / 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Títulos del bloque
+      ctx.font = 'bold 12px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(isRandom ? 'POSNETES: PATRÓN MÚSICA' : 'POSNETES: CAJÓN LIBRE', 38, 24);
+
+      ctx.font = 'bold 9px monospace';
+      ctx.fillText('▲ MELODÍA (30mm)', 38, 38);
+      ctx.fillText('▼ RITMO (30mm)', 38, 134);
+
+      if (!isRandom) {
+        // ========== MODO CAJÓN VACÍO: GUÍAS SUAVES ==========
+        // Carriles de altura melódica
+        ctx.strokeStyle = '#bbbbbb';
+        ctx.lineWidth = 1;
+        [52, 70, 88, 106].forEach(y => {
+          ctx.beginPath();
+          ctx.moveTo(38, y);
+          ctx.lineTo(w - 38, y);
+          ctx.stroke();
+        });
+
+        // Carriles de ritmo
+        [148, 168, 192, 214].forEach(y => {
+          ctx.beginPath();
+          ctx.moveTo(38, y);
+          ctx.lineTo(w - 38, y);
+          ctx.stroke();
+        });
+
+        // Líneas tenues de 4 tiempos (compás)
+        ctx.setLineDash([2, 4]);
+        const stepW = (w - 76) / 4;
+        for (let i = 1; i < 4; i++) {
+          const x = 38 + i * stepW;
+          ctx.beginPath();
+          ctx.moveTo(x, 42);
+          ctx.lineTo(x, h - 20);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      } else {
+        // ========== MODO PATRÓN ALEATORIO: DIBUJAR MÚSICA EXPRESIVA ==========
+        const styles = ['horizon', 'wave', 'acid', 'drops'];
+        const chosenStyle = styles[Math.floor(Math.random() * styles.length)];
+
+        if (chosenStyle === 'horizon') {
+          // Línea horizontal continua gruesa (Sustain Pad)
+          ctx.fillStyle = '#000000';
+          const padY = 70 + Math.floor(Math.random() * 2) * 20;
+          ctx.fillRect(40, padY, w - 80, 12); // Barra gruesa continua
+
+          // Bombos 4-on-the-floor abajo
+          const beatW = (w - 76) / 4;
+          for (let b = 0; b < 4; b++) {
+            const bx = 42 + b * beatW;
+            ctx.fillRect(bx, 204, 20, 18); // Bombo
+            if (b === 1 || b === 3) {
+              ctx.beginPath();
+              ctx.arc(bx + 10, 172, 8, 0, Math.PI * 2); // Caja
+              ctx.fill();
+            }
+          }
+        } else if (chosenStyle === 'wave') {
+          // Onda / Montaña rusa continua (Arpegio fluido)
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 10;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(40, 95);
+          ctx.bezierCurveTo(90, 48, 130, 48, 180, 95);
+          ctx.bezierCurveTo(230, 115, 270, 115, 320, 55);
+          ctx.stroke();
+
+          // Ritmo quebrado abajo
+          ctx.fillStyle = '#000000';
+          [42, 105, 210, 275].forEach(x => {
+            ctx.fillRect(x, 204, 18, 18);
+          });
+          [145, 310].forEach(x => {
+            ctx.beginPath();
+            ctx.arc(x, 172, 8, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        } else if (chosenStyle === 'acid') {
+          // Tobogán / Glissando diagonal + acentos verticales
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 9;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(42, 55);
+          ctx.lineTo(140, 105);
+          ctx.moveTo(200, 105);
+          ctx.lineTo(310, 55);
+          ctx.stroke();
+
+          // Acentos verticales gruesos
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(160, 52, 10, 55);
+          ctx.fillRect(330, 52, 10, 55);
+
+          // Bombos continuos
+          for (let b = 0; b < 4; b++) {
+            ctx.fillRect(42 + b * 72, 204, 20, 18);
+          }
+        } else {
+          // Lluvia de gotas (Staccato)
+          ctx.fillStyle = '#000000';
+          for (let g = 0; g < 14; g++) {
+            const gx = 45 + Math.random() * (w - 90);
+            const gy = 52 + Math.random() * 54;
+            ctx.beginPath();
+            ctx.arc(gx, gy, 7, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          // Ritmo de gotas abajo
+          for (let g = 0; g < 8; g++) {
+            const gx = 45 + Math.random() * (w - 90);
+            const gy = 150 + Math.random() * 64;
+            ctx.beginPath();
+            ctx.arc(gx, gy, 8, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+    }
+
+    // Enviar imagen a RawBT mediante Android Intent URL
+    function printCanvasWithRawBT() {
+      showToast('Enviando a impresora Bluetooth...');
+
+      // Convertir canvas a PNG Base64
+      const dataUrl = canvas.toDataURL('image/png');
+      const base64Data = dataUrl.split(',')[1];
+
+      // Formato oficial de Android Intent para RawBT:
+      // intent:base64#Intent;scheme=rawbt;package=ru.a402412.rawbt;end
+      const intentUrl = `intent:${base64Data}#Intent;scheme=rawbt;package=ru.a402412.rawbt;S.browser_fallback_url=https%3A%2F%2Frawbt.ru;end`;
+
+      // Intentar abrir el intent directamente en Android
+      window.location.href = intentUrl;
+    }
+
+    // Eventos de botones
+    document.getElementById('btnPrintRandom').addEventListener('click', () => {
+      drawThermalBlock(true);
+      setTimeout(printCanvasWithRawBT, 150);
+    });
+
+    document.getElementById('btnPrintEmpty').addEventListener('click', () => {
+      drawThermalBlock(false);
+      setTimeout(printCanvasWithRawBT, 150);
+    });
+
+    // Dibujo inicial de vista previa
+    drawThermalBlock(true);
+  </script>
+</body>
+</html>
