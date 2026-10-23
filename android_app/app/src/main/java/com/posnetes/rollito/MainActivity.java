@@ -21,6 +21,7 @@ import android.widget.Toast;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -44,90 +45,109 @@ public class MainActivity extends Activity {
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setBackgroundColor(Color.parseColor("#0F172A"));
-        layout.setPadding(40, 80, 40, 80);
+        layout.setPadding(40, 60, 40, 40);
         layout.setGravity(Gravity.CENTER);
 
-        Button btnRandom = new Button(this);
-        btnRandom.setText("PATRÓN ALEATORIO");
-        btnRandom.setTextSize(22);
-        btnRandom.setAllCaps(false);
-        btnRandom.setTextColor(Color.WHITE);
-        btnRandom.setBackgroundColor(Color.parseColor("#0284C7"));
-        LinearLayout.LayoutParams params1 = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 260);
-        params1.setMargins(0, 0, 0, 56);
-        btnRandom.setLayoutParams(params1);
-        btnRandom.setOnClickListener(v -> printBlock(true));
+        Button btnRandom = makeButton("PATRÓN ALEATORIO", 22, "#0284C7", 240, 40);
+        btnRandom.setOnClickListener(v -> startPrint(true, false));
         layout.addView(btnRandom);
 
-        Button btnEmpty = new Button(this);
-        btnEmpty.setText("CAJÓN VACÍO");
-        btnEmpty.setTextSize(22);
-        btnEmpty.setAllCaps(false);
-        btnEmpty.setTextColor(Color.WHITE);
-        btnEmpty.setBackgroundColor(Color.parseColor("#059669"));
-        LinearLayout.LayoutParams params2 = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 260);
-        btnEmpty.setLayoutParams(params2);
-        btnEmpty.setOnClickListener(v -> printBlock(false));
+        Button btnEmpty = makeButton("CAJÓN VACÍO", 22, "#059669", 240, 40);
+        btnEmpty.setOnClickListener(v -> startPrint(false, false));
         layout.addView(btnEmpty);
+
+        Button btnTest = makeButton("Probar Bluetooth", 13, "#1E293B", 0, 16);
+        btnTest.setTextColor(Color.parseColor("#94A3B8"));
+        btnTest.setOnClickListener(v -> startPrint(false, true));
+        layout.addView(btnTest);
+
+        Button btnChange = makeButton("Cambiar impresora", 13, "#0F172A", 0, 0);
+        btnChange.setTextColor(Color.parseColor("#64748B"));
+        btnChange.setOnClickListener(v -> {
+            prefs.edit().remove(PREF_PRINTER).apply();
+            toast("Elegí la impresora la próxima vez que imprimas");
+        });
+        layout.addView(btnChange);
 
         setContentView(layout);
     }
 
-    private void printBlock(boolean isRandom) {
+    private Button makeButton(String text, float sizeSp, String colorHex, int heightDp, int marginBottomDp) {
+        Button b = new Button(this);
+        b.setText(text);
+        b.setTextSize(sizeSp);
+        b.setAllCaps(false);
+        b.setTextColor(Color.WHITE);
+        if (colorHex != null) b.setBackgroundColor(Color.parseColor(colorHex));
+        float density = getResources().getDisplayMetrics().density;
+        int h = heightDp > 0 ? (int)(heightDp * density) : ViewGroup.LayoutParams.WRAP_CONTENT;
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, h);
+        p.setMargins(0, 0, 0, (int)(marginBottomDp * density));
+        b.setLayoutParams(p);
+        return b;
+    }
+
+    private void startPrint(boolean isRandom, boolean isTest) {
         BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
-        if (bt == null) { toast("Este dispositivo no tiene Bluetooth"); return; }
+        if (bt == null)      { toast("Este dispositivo no tiene Bluetooth"); return; }
         if (!bt.isEnabled()) { toast("Activá el Bluetooth primero"); return; }
 
-        String address = prefs.getString(PREF_PRINTER, null);
-        if (address == null) {
-            showPrinterSelector(bt, isRandom);
+        String addr = prefs.getString(PREF_PRINTER, null);
+        if (addr == null) {
+            pickPrinter(bt, isRandom, isTest);
         } else {
-            connectAndPrint(bt, address, isRandom);
+            connectAndSend(bt, addr, isRandom, isTest);
         }
     }
 
-    private void showPrinterSelector(BluetoothAdapter bt, boolean isRandom) {
+    private void pickPrinter(BluetoothAdapter bt, boolean isRandom, boolean isTest) {
         Set<BluetoothDevice> bonded = bt.getBondedDevices();
         if (bonded.isEmpty()) {
-            toast("No hay impresoras emparejadas.\nAndá a Ajustes → Bluetooth y emparejá la impresora.");
+            toast("No hay dispositivos Bluetooth emparejados.\nAndá a Ajustes → Bluetooth y emparejá la impresora.");
             return;
         }
-        List<BluetoothDevice> devices = new ArrayList<>(bonded);
-        String[] names = new String[devices.size()];
-        for (int i = 0; i < devices.size(); i++) {
-            String n = devices.get(i).getName();
-            names[i] = (n != null && !n.isEmpty()) ? n : devices.get(i).getAddress();
+        List<BluetoothDevice> list = new ArrayList<>(bonded);
+        String[] labels = new String[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            String n = list.get(i).getName();
+            labels[i] = (n != null && !n.isEmpty())
+                    ? n + "  [" + list.get(i).getAddress() + "]"
+                    : list.get(i).getAddress();
         }
         new AlertDialog.Builder(this)
                 .setTitle("Elegir impresora Bluetooth")
-                .setItems(names, (d, i) -> {
-                    prefs.edit().putString(PREF_PRINTER, devices.get(i).getAddress()).apply();
-                    connectAndPrint(bt, devices.get(i).getAddress(), isRandom);
+                .setItems(labels, (d, i) -> {
+                    prefs.edit().putString(PREF_PRINTER, list.get(i).getAddress()).apply();
+                    connectAndSend(bt, list.get(i).getAddress(), isRandom, isTest);
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
     }
 
-    private void connectAndPrint(BluetoothAdapter bt, String address, boolean isRandom) {
+    private void connectAndSend(BluetoothAdapter bt, String address, boolean isRandom, boolean isTest) {
         toast("Conectando...");
         new Thread(() -> {
             BluetoothSocket socket = null;
             try {
                 BluetoothDevice device = bt.getRemoteDevice(address);
                 bt.cancelDiscovery();
-                socket = device.createRfcommSocketToServiceRecord(BT_SPP_UUID);
-                socket.connect();
+                socket = openSocket(device);
 
                 OutputStream out = socket.getOutputStream();
-                out.write(bitmapToEscPos(generateBitmap(isRandom)));
+                out.write(isTest ? makeTextTest() : makeBitmap(isRandom));
                 out.flush();
+                Thread.sleep(300);
 
-                runOnUiThread(() -> toast("✓ Impreso"));
-            } catch (IOException e) {
+                final String msg = isTest
+                        ? "Prueba enviada — ¿salió algo de la impresora?"
+                        : "✓ Enviado";
+                runOnUiThread(() -> toast(msg));
+
+            } catch (Exception e) {
                 runOnUiThread(() -> {
-                    toast("Error de conexión. Revisá que la impresora esté encendida.");
+                    toast("Error: " + e.getMessage()
+                            + "\nVerificá que la impresora esté encendida y que elegiste el dispositivo correcto.");
                     prefs.edit().remove(PREF_PRINTER).apply();
                 });
             } finally {
@@ -136,47 +156,93 @@ public class MainActivity extends Activity {
         }).start();
     }
 
-    private void toast(String msg) {
-        runOnUiThread(() -> Toast.makeText(this, msg, Toast.LENGTH_LONG).show());
+    /**
+     * Intenta abrir el socket BT con 3 métodos, del más compatible al más directo.
+     * Muchos módulos BT baratos (HC-05/HC-06) no anuncian su UUID correctamente
+     * pero aceptan conexiones en el canal RFCOMM 1 via reflexión.
+     */
+    private BluetoothSocket openSocket(BluetoothDevice device) throws IOException {
+        // Intento 1: SPP estándar con SDP
+        try {
+            BluetoothSocket s = device.createRfcommSocketToServiceRecord(BT_SPP_UUID);
+            s.connect();
+            return s;
+        } catch (IOException ignored) {}
+
+        // Intento 2: SPP sin cifrado
+        try {
+            BluetoothSocket s = device.createInsecureRfcommSocketToServiceRecord(BT_SPP_UUID);
+            s.connect();
+            return s;
+        } catch (IOException ignored) {}
+
+        // Intento 3: RFCOMM canal 1 directo (funciona con módulos que no tienen SDP)
+        try {
+            Method m = device.getClass().getMethod("createRfcommSocket", int.class);
+            BluetoothSocket s = (BluetoothSocket) m.invoke(device, 1);
+            s.connect();
+            return s;
+        } catch (Exception e) {
+            throw new IOException("No se pudo conectar al dispositivo: " + device.getName());
+        }
     }
 
-    private byte[] bitmapToEscPos(Bitmap bmp) throws IOException {
-        int width = bmp.getWidth();
-        int height = bmp.getHeight();
-        int bytesPerRow = (width + 7) / 8;
+    /** Solo texto — sirve para verificar que el Bluetooth está conectado a la impresora correcta. */
+    private byte[] makeTextTest() {
+        ByteArrayOutputStream o = new ByteArrayOutputStream();
+        try {
+            o.write(new byte[]{0x1B, 0x40});              // ESC @ init
+            o.write(new byte[]{0x1B, 0x61, 0x01});        // ESC a 1 center
+            o.write("\nROLLITO\n".getBytes("UTF-8"));
+            o.write("--- Prueba BT OK ---\n\n\n".getBytes("UTF-8"));
+            o.write(new byte[]{0x1D, 0x56, 0x42, 0x00}); // GS V B 0 cut
+        } catch (Exception ignored) {}
+        return o.toByteArray();
+    }
 
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+    /**
+     * Convierte el bitmap a ESC * (comando columnar, soportado por prácticamente
+     * todas las impresoras térmicas, incluyendo las más económicas).
+     * GS v 0 (raster) es más nuevo y no siempre está soportado.
+     */
+    private byte[] makeBitmap(boolean isRandom) {
+        Bitmap bmp = generateBitmap(isRandom);
+        int w = bmp.getWidth();
+        int h = bmp.getHeight();
+        ByteArrayOutputStream o = new ByteArrayOutputStream();
+        try {
+            o.write(new byte[]{0x1B, 0x40});       // ESC @ init
+            o.write(new byte[]{0x1B, 0x33, 0x08}); // ESC 3 8 — 8 dots line spacing
 
-        // ESC @ — inicializar impresora
-        out.write(new byte[]{0x1B, 0x40});
-        // ESC 3 0 — espaciado mínimo entre líneas
-        out.write(new byte[]{0x1B, 0x33, 0x00});
-        // GS v 0 — imagen raster (densidad normal)
-        out.write(new byte[]{
-            0x1D, 0x76, 0x30, 0x00,
-            (byte)(bytesPerRow & 0xFF), (byte)((bytesPerRow >> 8) & 0xFF),
-            (byte)(height & 0xFF), (byte)((height >> 8) & 0xFF)
-        });
-
-        for (int y = 0; y < height; y++) {
-            for (int bx = 0; bx < bytesPerRow; bx++) {
-                byte b = 0;
-                for (int bit = 0; bit < 8; bit++) {
-                    int px = bx * 8 + bit;
-                    if (px < width) {
-                        int pixel = bmp.getPixel(px, y);
-                        int lum = (Color.red(pixel) + Color.green(pixel) + Color.blue(pixel)) / 3;
-                        if (lum < 128) b |= (byte)(0x80 >> bit);
+            // ESC * 0 nL nH [data]: imprime bandas de 8 filas de puntos
+            for (int y = 0; y < h; y += 8) {
+                o.write(new byte[]{0x1B, 0x2A, 0x00,
+                        (byte)(w & 0xFF), (byte)((w >> 8) & 0xFF)});
+                for (int x = 0; x < w; x++) {
+                    byte col = 0;
+                    for (int dy = 0; dy < 8; dy++) {
+                        if (y + dy < h) {
+                            int pixel = bmp.getPixel(x, y + dy);
+                            int lum = (Color.red(pixel)
+                                     + Color.green(pixel)
+                                     + Color.blue(pixel)) / 3;
+                            if (lum < 128) col |= (byte)(0x80 >> dy);
+                        }
                     }
+                    o.write(col);
                 }
-                out.write(b);
+                o.write(0x0A); // LF — avanza al próximo bloque de 8 filas
             }
-        }
 
-        // Avanzar papel y cortar
-        out.write(new byte[]{0x1B, 0x64, 0x05});     // ESC d 5
-        out.write(new byte[]{0x1D, 0x56, 0x42, 0x00}); // GS V B 0
-        return out.toByteArray();
+            o.write(new byte[]{0x1B, 0x32});        // ESC 2 — restaurar espaciado
+            o.write(new byte[]{0x1B, 0x64, 0x05}); // ESC d 5 — avanzar 5 líneas
+            o.write(new byte[]{0x1D, 0x56, 0x42, 0x00}); // GS V B cut
+        } catch (Exception ignored) {}
+        return o.toByteArray();
+    }
+
+    private void toast(String msg) {
+        runOnUiThread(() -> Toast.makeText(this, msg, Toast.LENGTH_LONG).show());
     }
 
     private Bitmap generateBitmap(boolean isRandom) {
@@ -201,20 +267,18 @@ public class MainActivity extends Activity {
         canvas.drawRect(8, PRINT_HEIGHT - 8 - m, 8 + m, PRINT_HEIGHT - 8, p);
         canvas.drawRect(PRINT_WIDTH - 8 - m, PRINT_HEIGHT - 8 - m, PRINT_WIDTH - 8, PRINT_HEIGHT - 8, p);
 
-        // Línea divisoria central punteada (Melodía / Ritmo)
+        // Línea divisoria central punteada
         p.setStyle(Paint.Style.STROKE);
         p.setPathEffect(new DashPathEffect(new float[]{4, 4}, 0));
         canvas.drawLine(8, PRINT_HEIGHT / 2, PRINT_WIDTH - 8, PRINT_HEIGHT / 2, p);
         p.setPathEffect(null);
 
-        // Etiquetas de zona
         p.setStyle(Paint.Style.FILL);
         p.setTextSize(9);
         canvas.drawText("MELODIA", 38, 38, p);
         canvas.drawText("RITMO", 38, 134, p);
 
         if (!isRandom) {
-            // Guías tenues para dibujar a mano
             p.setStyle(Paint.Style.STROKE);
             p.setColor(Color.LTGRAY);
             p.setStrokeWidth(1);
@@ -225,14 +289,14 @@ public class MainActivity extends Activity {
             p.setStyle(Paint.Style.FILL);
             Random rnd = new Random();
             switch (rnd.nextInt(3)) {
-                case 0: // Pad sostenido + bombos
+                case 0:
                     canvas.drawRect(40, 75, PRINT_WIDTH - 40, 87, p);
                     for (int b = 0; b < 4; b++) {
                         int bx = 42 + b * 72;
                         canvas.drawRect(bx, 204, bx + 20, 222, p);
                     }
                     break;
-                case 1: // Onda / melodía en arco
+                case 1:
                     p.setStyle(Paint.Style.STROKE);
                     p.setStrokeWidth(8);
                     canvas.drawLine(42, 95, 120, 55, p);
@@ -245,7 +309,7 @@ public class MainActivity extends Activity {
                         canvas.drawRect(bx, 204, bx + 18, 222, p);
                     }
                     break;
-                default: // Gotas / staccato
+                default:
                     for (int i = 0; i < 12; i++)
                         canvas.drawCircle(45 + rnd.nextInt(PRINT_WIDTH - 90), 52 + rnd.nextInt(55), 6, p);
                     for (int i = 0; i < 6; i++)
