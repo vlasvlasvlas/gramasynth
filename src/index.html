@@ -14,64 +14,48 @@
       <span id="statusBadge" class="status-badge status-idle">IDLE</span>
     </div>
     <div class="top-actions">
+      <span id="confidenceMeter" class="confidence-text">—</span>
+      <button id="btnCapture" class="btn btn-accept">📸 Capturar</button>
       <button id="btnPlay" class="btn btn-primary">▶ Iniciar</button>
     </div>
   </header>
 
   <main>
 
-    <!-- PANEL: CÁMARA -->
-    <div class="panel" id="panelCamera">
+    <!-- COLUMNA IZQUIERDA: CÁMARA + controles de lectura -->
+    <div class="panel panel-left" id="panelCamera">
       <div class="panel-header">
         <h2>Cámara</h2>
         <div class="control-group">
-          <select id="cameraSelect">
-            <option value="">Predeterminada</option>
-          </select>
+          <select id="cameraSelect"><option value="">Predeterminada</option></select>
           <button id="btnCamera" class="btn btn-primary">Activar</button>
-          <button id="btnMirror" class="btn" title="Espejo horizontal">⇄</button>
-          <button id="btnFlipV" class="btn" title="Invertir vertical">⇅</button>
+          <button id="btnMirror" class="btn" title="Espejo">⇄</button>
+          <button id="btnFlipV" class="btn" title="Voltear">⇅</button>
         </div>
       </div>
 
+      <!-- Viewport: video + pines + binary overlay como inset -->
       <div class="camera-viewport">
         <video id="webcam" playsinline autoplay muted></video>
         <canvas id="pinCanvas" class="corner-pin-canvas"></canvas>
+        <!-- Binary inset: esquina inferior-derecha, muestra el procesado en tiempo real -->
+        <canvas id="processedCanvas" class="binary-inset" width="480" height="240"></canvas>
+        <span class="inset-label">BINARIO</span>
       </div>
 
+      <!-- Canvas de trabajo oculto (para homografía y lectura) -->
+      <canvas id="rectifiedCanvas" class="offscreen-canvas" width="480" height="240"></canvas>
+
       <div class="controls-bar">
-        <button id="btnAutoCorner" class="btn btn-primary">✨ Auto-Esquinas</button>
+        <button id="btnAutoCorner" class="btn btn-primary">✨ Auto-Esq.</button>
         <button id="btnResetPins" class="btn">↺ Centrar</button>
         <label class="toggle-label">
-          <input type="checkbox" id="autoTrackCheck">
-          Auto-seguir
+          <input type="checkbox" id="autoTrackCheck"> Seguir
         </label>
         <span id="cornerDetectStatus" class="status-text">Pines ajustables</span>
       </div>
-    </div>
 
-    <!-- PANEL: VISIÓN + CAPTURA -->
-    <div class="panel" id="panelVision">
-      <div class="panel-header">
-        <h2>Lectura</h2>
-        <div class="control-group">
-          <span id="confidenceMeter" class="confidence-text">—</span>
-          <button id="btnCapture" class="btn btn-primary">📸 Capturar</button>
-        </div>
-      </div>
-
-      <div class="vision-dual-display">
-        <div class="vision-box">
-          <span class="vision-box-tag">Color</span>
-          <canvas id="rectifiedCanvas" class="rectified-canvas" width="480" height="240"></canvas>
-        </div>
-        <div class="vision-box">
-          <span class="vision-box-tag">Binario (notas)</span>
-          <canvas id="processedCanvas" class="rectified-canvas" width="480" height="240"></canvas>
-        </div>
-      </div>
-
-      <div class="controls-bar">
+      <div class="controls-bar controls-bar-sliders">
         <div class="control-group">
           <label>Brillo</label>
           <input type="range" id="brightnessSlider" min="50" max="200" value="100">
@@ -87,41 +71,44 @@
           <input type="range" id="thresholdSlider" min="30" max="220" value="125">
           <span id="thresholdVal">125</span>
         </div>
-        <button id="btnAutoThreshold" class="btn">Auto-Umbral</button>
+        <button id="btnAutoThreshold" class="btn">Auto</button>
       </div>
     </div>
 
-    <!-- PANEL: SECUENCIADOR -->
-    <div class="panel sequencer-panel">
+    <!-- COLUMNA DERECHA: SECUENCIADOR (ocupa toda la altura) -->
+    <div class="panel panel-right sequencer-panel">
       <div class="panel-header">
         <h2>Secuenciador</h2>
         <div class="control-group">
-          <button id="btnAccept" class="btn btn-accept" disabled>✓ Aceptar <span class="badge-key">ESPACIO</span></button>
-          <button id="btnDiscard" class="btn btn-action" disabled>✕ Descartar <span class="badge-key">ESC</span></button>
-          <div class="control-group" style="margin-left: 16px;">
-            <label>Plantilla:</label>
-            <select id="templateSelect">
-              <option value="template_01">4-on-the-floor</option>
-              <option value="template_02">Síncopa</option>
-              <option value="template_03">Ambient</option>
-              <option value="template_04">Acid</option>
-              <option value="template_05">3/4</option>
-            </select>
-            <button id="btnLoadTemplate" class="btn">Cargar</button>
-          </div>
+          <button id="btnAccept" class="btn btn-accept" disabled>✓ <span class="badge-key">ESPACIO</span></button>
+          <button id="btnDiscard" class="btn btn-action" disabled>✕ <span class="badge-key">ESC</span></button>
+          <select id="kitSelect" title="Kit de batería">
+            <option value="electronic">Kit: Electrónico</option>
+            <option value="acoustic">Kit: Acústico</option>
+            <option value="lofi">Kit: Lo-Fi</option>
+            <option value="8bit">Kit: 8bit</option>
+          </select>
+          <select id="templateSelect">
+            <option value="template_01">4-on-the-floor</option>
+            <option value="template_02">Síncopa</option>
+            <option value="template_03">Ambient</option>
+            <option value="template_04">Acid</option>
+            <option value="template_05">3/4</option>
+          </select>
+          <button id="btnLoadTemplate" class="btn">Cargar</button>
         </div>
       </div>
 
-      <canvas id="sequencerCanvas" class="sequencer-canvas" width="960" height="280"></canvas>
+      <canvas id="sequencerCanvas" class="sequencer-canvas" width="960" height="320"></canvas>
 
       <div class="controls-bar">
         <div class="control-group">
-          <label>BPM:</label>
+          <label>BPM</label>
           <input type="range" id="bpmSlider" min="50" max="180" value="110">
           <span id="bpmVal">110</span>
         </div>
         <div class="control-group">
-          <label>Tono:</label>
+          <label>Tono</label>
           <select id="rootNoteSelect">
             <option value="0">C</option>
             <option value="1">C#</option>

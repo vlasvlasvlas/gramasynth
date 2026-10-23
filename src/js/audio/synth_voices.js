@@ -5,6 +5,33 @@
  * Rows 4..7: Synthetic Drum Voices (Perc, HiHat, Snare, Kick)
  */
 
+const KITS = {
+  electronic: {
+    melodyWave: 'sine',
+    kick:  { startFreq: 120, endFreq: 42,  dur: 0.22, vol: 0.6 },
+    snare: { hpFreq: 1200, oscFreq: 185, dur: 0.15, vol: 0.35 },
+    hat:   { hpFreq: 7500, openDur: 0.25, closedDur: 0.05, vol: 0.25 },
+  },
+  acoustic: {
+    melodyWave: 'triangle',
+    kick:  { startFreq: 90,  endFreq: 38,  dur: 0.35, vol: 0.7 },
+    snare: { hpFreq: 900,  oscFreq: 160, dur: 0.22, vol: 0.45 },
+    hat:   { hpFreq: 6000, openDur: 0.40, closedDur: 0.08, vol: 0.20 },
+  },
+  lofi: {
+    melodyWave: 'square',
+    kick:  { startFreq: 100, endFreq: 50,  dur: 0.28, vol: 0.5 },
+    snare: { hpFreq: 800,  oscFreq: 200, dur: 0.20, vol: 0.40 },
+    hat:   { hpFreq: 5000, openDur: 0.18, closedDur: 0.06, vol: 0.18 },
+  },
+  '8bit': {
+    melodyWave: 'square',
+    kick:  { startFreq: 200, endFreq: 60,  dur: 0.12, vol: 0.55 },
+    snare: { hpFreq: 2000, oscFreq: 250, dur: 0.08, vol: 0.30 },
+    hat:   { hpFreq: 9000, openDur: 0.10, closedDur: 0.03, vol: 0.22 },
+  },
+};
+
 export class VoicePool {
   constructor(audioCtx) {
     this.ctx = audioCtx;
@@ -12,16 +39,20 @@ export class VoicePool {
     this.masterGain.gain.setValueAtTime(0.85, this.ctx.currentTime);
     this.masterGain.connect(this.ctx.destination);
 
-    // Frecuencias base para las 4 filas melódicas (Escala Pentatónica Mayor en Do: C5, A4, G4, E4 / C4)
+    this.kit = KITS.electronic;
+
     this.melodyFrequencies = [
-      523.25, // Fila 0: Do5 / C5 (Lead agudo)
-      440.00, // Fila 1: La4 / A4
-      392.00, // Fila 2: Sol4 / G4
-      261.63  // Fila 3: Do4 / C4 (Bajo)
+      523.25, // C5
+      440.00, // A4
+      392.00, // G4
+      261.63  // C4
     ];
 
-    // Buffer de ruido blanco precalculado para percusión (Snare / Hats)
     this.noiseBuffer = this.createNoiseBuffer();
+  }
+
+  setKit(kitName) {
+    this.kit = KITS[kitName] || KITS.electronic;
   }
 
   setRootNote(semitone) {
@@ -60,13 +91,13 @@ export class VoicePool {
     const filter = this.ctx.createBiquadFilter();
     const gain = this.ctx.createGain();
 
-    // Tipo de forma de onda según gesto
+    // Tipo de forma de onda: rich/accent sobreescriben el kit base
     if (cellType === 'rich') {
       osc.type = 'sawtooth';
     } else if (cellType === 'accent') {
       osc.type = 'triangle';
     } else {
-      osc.type = 'sine';
+      osc.type = this.kit.melodyWave || 'sine';
     }
     osc.frequency.setValueAtTime(freq, time);
 
@@ -126,69 +157,70 @@ export class VoicePool {
   }
 
   playKick(time, cellType) {
+    const k = this.kit.kick;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
-    const startFreq = (cellType === 'rich' || cellType === 'accent') ? 160 : 120;
+    const startFreq = (cellType === 'rich' || cellType === 'accent') ? k.startFreq * 1.3 : k.startFreq;
     osc.frequency.setValueAtTime(startFreq, time);
-    osc.frequency.exponentialRampToValueAtTime(42, time + 0.08);
+    osc.frequency.exponentialRampToValueAtTime(k.endFreq, time + 0.08);
 
-    const volume = (cellType === 'accent') ? 0.8 : 0.6;
+    const volume = (cellType === 'accent') ? k.vol * 1.3 : k.vol;
     gain.gain.setValueAtTime(volume, time);
-    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.22);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + k.dur);
 
     osc.connect(gain);
     gain.connect(this.masterGain);
     osc.start(time);
-    osc.stop(time + 0.24);
+    osc.stop(time + k.dur + 0.02);
   }
 
   playSnare(time, cellType) {
-    // Ruido filtrado
+    const s = this.kit.snare;
     const noise = this.ctx.createBufferSource();
     noise.buffer = this.noiseBuffer;
     const noiseFilter = this.ctx.createBiquadFilter();
     noiseFilter.type = 'highpass';
-    noiseFilter.frequency.setValueAtTime(1200, time);
+    noiseFilter.frequency.setValueAtTime(s.hpFreq, time);
 
     const noiseGain = this.ctx.createGain();
-    noiseGain.gain.setValueAtTime(0.35, time);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
+    noiseGain.gain.setValueAtTime(s.vol, time);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, time + s.dur);
 
     noise.connect(noiseFilter);
     noiseFilter.connect(noiseGain);
     noiseGain.connect(this.masterGain);
 
-    // Tono base
     const osc = this.ctx.createOscillator();
     const oscGain = this.ctx.createGain();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(185, time);
-    osc.frequency.exponentialRampToValueAtTime(90, time + 0.07);
+    osc.frequency.setValueAtTime(s.oscFreq, time);
+    osc.frequency.exponentialRampToValueAtTime(s.oscFreq * 0.5, time + 0.07);
 
-    oscGain.gain.setValueAtTime(0.3, time);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+    oscGain.gain.setValueAtTime(s.vol * 0.85, time);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, time + s.dur * 0.7);
 
     osc.connect(oscGain);
     oscGain.connect(this.masterGain);
 
     noise.start(time);
     osc.start(time);
-    noise.stop(time + 0.18);
-    osc.stop(time + 0.18);
+    noise.stop(time + s.dur + 0.03);
+    osc.stop(time + s.dur + 0.03);
   }
 
   playHiHat(time, isOpen, cellType) {
+    const h = this.kit.hat;
     const noise = this.ctx.createBufferSource();
     noise.buffer = this.noiseBuffer;
 
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'highpass';
-    filter.frequency.setValueAtTime(7500, time);
+    filter.frequency.setValueAtTime(h.hpFreq, time);
 
     const gain = this.ctx.createGain();
-    const duration = isOpen ? 0.25 : 0.05;
-    const volume = (cellType === 'accent') ? 0.4 : 0.25;
+    const duration = isOpen ? h.openDur : h.closedDur;
+    const volume = (cellType === 'accent') ? h.vol * 1.6 : h.vol;
 
     gain.gain.setValueAtTime(volume, time);
     gain.gain.exponentialRampToValueAtTime(0.001, time + duration);

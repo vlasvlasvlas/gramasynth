@@ -8,102 +8,108 @@
   --accent-magenta: #ec4899;
   --accent-amber: #f59e0b;
   --accent-green: #10b981;
+  --header-h: 48px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
   background-color: var(--bg-color);
   color: var(--text-main);
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
+/* ── HEADER ───────────────────────────────────────────── */
 header {
+  height: var(--header-h);
+  flex-shrink: 0;
   background: var(--panel-bg);
   border-bottom: 1px solid var(--border-color);
-  padding: 10px 20px;
+  padding: 0 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand h1 { font-size: 1rem; letter-spacing: 3px; color: var(--accent-cyan); }
 
-.brand h1 {
-  font-size: 1.1rem;
-  letter-spacing: 2px;
-  color: var(--accent-cyan);
-}
-
-.top-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+.top-actions { display: flex; align-items: center; gap: 8px; }
 
 .status-badge {
-  padding: 3px 10px;
+  padding: 2px 8px;
   border-radius: 9999px;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+.status-idle    { background: #334155; color: #cbd5e1; }
+.status-running { background: rgba(0,240,255,.15); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+.status-preview { background: rgba(245,158,11,.15); color: var(--accent-amber); border: 1px solid var(--accent-amber); animation: pulse 1s infinite; }
+.status-pending { background: rgba(236,72,153,.15); color: var(--accent-magenta); border: 1px solid var(--accent-magenta); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 
-.status-idle     { background: #334155; color: #cbd5e1; }
-.status-running  { background: rgba(0,240,255,.15); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
-.status-preview  { background: rgba(245,158,11,.15); color: var(--accent-amber); border: 1px solid var(--accent-amber); animation: pulse 1s infinite; }
-.status-pending  { background: rgba(236,72,153,.15); color: var(--accent-magenta); border: 1px solid var(--accent-magenta); }
-
-@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
-
+/* ── MAIN GRID ────────────────────────────────────────── */
 main {
   flex: 1;
-  padding: 16px 20px;
+  min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto 1fr;
-  gap: 16px;
+  grid-template-columns: 360px 1fr;
+  gap: 10px;
+  padding: 10px;
 }
 
+/* ── PANELS ───────────────────────────────────────────── */
 .panel {
   background: var(--panel-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  padding: 10px;
+  min-height: 0;
+  overflow: hidden;
 }
 
+.panel-left  { overflow: visible; }
+.panel-right { }
+
 .panel-header {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 8px;
+  padding-bottom: 7px;
   border-bottom: 1px solid var(--border-color);
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .panel-header h2 {
-  font-size: 0.9rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
+  white-space: nowrap;
 }
 
+/* ── CAMERA VIEWPORT ──────────────────────────────────── */
 .camera-viewport {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  flex: 1;
+  min-height: 0;
   background: #000;
   border-radius: 6px;
   overflow: hidden;
@@ -113,119 +119,136 @@ video {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .corner-pin-canvas {
   position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: auto;
   cursor: crosshair;
   touch-action: none;
+  z-index: 2;
 }
 
-.vision-dual-display {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.vision-box {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.vision-box-tag {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.rectified-canvas {
-  width: 100%;
-  aspect-ratio: 2 / 1;
+/* Binary inset overlay — esquina inferior derecha */
+.binary-inset {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 180px;
+  height: 90px;
+  border: 1px solid var(--accent-cyan);
   border-radius: 4px;
-  border: 1px solid var(--border-color);
-  background: #090b10;
+  z-index: 3;
+  opacity: 0.85;
+  pointer-events: none;
 }
 
-.sequencer-panel { grid-column: 1 / -1; }
+.inset-label {
+  position: absolute;
+  right: 12px;
+  bottom: 102px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  letter-spacing: 1px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* Hidden working canvas */
+.offscreen-canvas {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  pointer-events: none;
+}
+
+/* ── SEQUENCER ────────────────────────────────────────── */
+.sequencer-panel { }
 
 .sequencer-canvas {
   width: 100%;
-  height: 260px;
+  flex: 1;
+  min-height: 0;
   border-radius: 6px;
   border: 1px solid var(--border-color);
   cursor: pointer;
+  display: block;
 }
 
+/* ── CONTROLS ─────────────────────────────────────────── */
 .controls-bar {
+  flex-shrink: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+}
+
+.controls-bar-sliders {
+  gap: 6px;
+  font-size: 0.76rem;
 }
 
 .control-group {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
+  gap: 5px;
+  font-size: 0.78rem;
 }
 
 .btn {
   background: #1e293b;
   color: var(--text-main);
   border: 1px solid var(--border-color);
-  padding: 7px 13px;
-  border-radius: 6px;
-  font-size: 0.82rem;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
-  transition: background 0.12s;
+  gap: 4px;
+  transition: background 0.1s;
   white-space: nowrap;
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
 }
-
 .btn:hover, .btn:active { background: #334155; }
 
 .btn-primary { background: #0284c7; border-color: #38bdf8; color: #fff; }
 .btn-primary:hover, .btn-primary:active { background: #0369a1; }
 
-.btn-action { background: #e11d48; border-color: #fb7185; color: #fff; }
+.btn-action  { background: #e11d48; border-color: #fb7185; color: #fff; }
 .btn-action:hover, .btn-action:active { background: #be123c; }
 
-.btn-accept { background: #059669; border-color: #34d399; color: #fff; }
+.btn-accept  { background: #059669; border-color: #34d399; color: #fff; }
 .btn-accept:hover, .btn-accept:active { background: #047857; }
 
 .badge-key {
-  background: #334155;
-  padding: 1px 5px;
+  background: rgba(255,255,255,0.15);
+  padding: 1px 4px;
   border-radius: 3px;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-family: monospace;
-  border: 1px solid #475569;
 }
 
 .toggle-label {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 0.82rem;
+  gap: 4px;
+  font-size: 0.78rem;
   cursor: pointer;
   color: var(--text-muted);
 }
 
 .status-text {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   margin-left: auto;
 }
@@ -238,29 +261,30 @@ video {
 
 .legend {
   display: flex;
-  gap: 14px;
-  font-size: 0.78rem;
+  gap: 10px;
+  font-size: 0.74rem;
   color: var(--text-muted);
   margin-left: auto;
 }
 
-input[type="range"] { accent-color: var(--accent-cyan); width: 80px; }
+input[type="range"] { accent-color: var(--accent-cyan); width: 70px; }
 
 select {
   background: #1e293b;
   color: var(--text-main);
   border: 1px solid var(--border-color);
-  padding: 5px 8px;
-  border-radius: 6px;
-  font-size: 0.82rem;
+  padding: 4px 6px;
+  border-radius: 5px;
+  font-size: 0.78rem;
 }
 
+/* ── RESPONSIVE ───────────────────────────────────────── */
 @media (max-width: 900px) {
+  html, body { overflow: auto; }
   main {
     grid-template-columns: 1fr;
-    padding: 12px;
+    height: auto;
   }
-  .sequencer-panel { grid-column: 1; }
-  .vision-dual-display { grid-template-columns: 1fr; }
-  .sequencer-canvas { height: 200px; }
+  .panel-left { height: 80vw; }
+  .binary-inset { width: 120px; height: 60px; }
 }

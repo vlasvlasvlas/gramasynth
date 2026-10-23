@@ -36,6 +36,7 @@ class App {
     this.btnDiscard = document.getElementById('btnDiscard');
     this.btnLoadTemplate = document.getElementById('btnLoadTemplate');
     this.templateSelect = document.getElementById('templateSelect');
+    this.kitSelect = document.getElementById('kitSelect');
 
     this.brightnessSlider = document.getElementById('brightnessSlider');
     this.brightnessVal = document.getElementById('brightnessVal');
@@ -166,6 +167,13 @@ class App {
       this.rootNoteSelect.addEventListener('change', (e) => {
         const semitone = parseInt(e.target.value, 10);
         this.audioEngine.voices && this.audioEngine.voices.setRootNote(semitone);
+      });
+    }
+
+    // Kit selector
+    if (this.kitSelect) {
+      this.kitSelect.addEventListener('change', (e) => {
+        this.audioEngine.voices && this.audioEngine.voices.setKit(e.target.value);
       });
     }
 
