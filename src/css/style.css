@@ -80,9 +80,13 @@ main {
   gap: 8px;
   padding: 10px;
   min-height: 0;
-  height: 100%;     /* ocupa toda la altura de la celda del grid */
+  height: 100%;
   overflow: hidden;
   box-sizing: border-box;
+}
+
+.panel-left {
+  overflow-y: auto;   /* scroll si los controles no entran debajo de la cámara */
 }
 
 .panel-header {
@@ -109,9 +113,8 @@ main {
 .camera-viewport {
   position: relative;
   width: 100%;
-  flex: 1;
-  min-height: 0;
-  height: 0;       /* con flex:1 esto fuerza que tome solo el espacio disponible */
+  aspect-ratio: 4 / 3;   /* ratio fijo: siempre muestra la imagen completa */
+  flex-shrink: 0;
   background: #000;
   border-radius: 6px;
   overflow: hidden;
@@ -120,7 +123,7 @@ main {
 video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;   /* sin recorte: imagen completa con bordes negros si es necesario */
   display: block;
 }
 
