@@ -22,14 +22,15 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle cache
+      - name: Setup Gradle 7.5
         uses: gradle/actions/setup-gradle@v4
-
-      - name: Make gradlew executable
-        run: chmod +x android_app/gradlew
+        with:
+          gradle-version: '7.5'
 
       - name: Build Debug APK
-        run: cd android_app && ./gradlew assembleDebug --stacktrace
+        run: |
+          cd android_app
+          gradle assembleDebug --stacktrace
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
 
