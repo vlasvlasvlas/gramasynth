@@ -75,17 +75,20 @@ export class Pattern {
 export const TEMPLATES = {
   template_01: () => {
     const p = new Pattern('t1', 'template', 'printed');
+    // B1: El Horizonte & El Pulso
     // Ritmo: 4-on-the-floor
-    // Fila 7: Kick en 0, 4, 8, 12
+    // Fila 7: Kick pesado en 0, 4, 8, 12
     [0, 4, 8, 12].forEach(c => p.setCell(7, c, true, 'rich'));
     // Fila 6: Snare en 4, 12
     [4, 12].forEach(c => p.setCell(6, c, true, 'trigger'));
     // Fila 5: Closed Hat en 2, 6, 10, 14
     [2, 6, 10, 14].forEach(c => p.setCell(5, c, true, 'trigger'));
-    // Melodía: Bajo con sustain en fila 3
-    [0, 1, 4, 5, 8, 9, 12, 13].forEach(c => p.setCell(3, c, true, 'sustain'));
-    // Nota alta en fila 1
-    [2, 10].forEach(c => p.setCell(1, c, true, 'trigger'));
+    // Melodía: Línea horizontal continua en Fila 2 (Sol4 Pad sostenido)
+    for (let c = 0; c < 16; c++) {
+      p.setCell(2, c, true, 'sustain');
+    }
+    // Gotas agudas en Fila 0 (Do5)
+    [4, 12].forEach(c => p.setCell(0, c, true, 'trigger'));
     return p;
   },
 

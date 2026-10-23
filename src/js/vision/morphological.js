@@ -48,22 +48,22 @@ export class MorphologicalClassifier {
     let gestureType = 'trigger';
     let confidence = 0.85;
 
-    // 1. Bloque muy denso o cuadrado relleno
-    if (density > 0.65) {
+    // 1. Bloque denso o trazo grueso cargado de tinta
+    if (density > 0.48) {
       gestureType = 'rich';
       confidence = 0.95;
     }
-    // 2. Línea horizontal (Sustain / Ligadura)
-    else if (aspectRatio > 2.2 && strokeWidth > width * 0.5) {
+    // 2. Línea horizontal (Sustain / Ligadura continua)
+    else if (aspectRatio > 1.45 && strokeWidth > width * 0.40) {
       gestureType = 'sustain';
       confidence = 0.92;
     }
-    // 3. Línea vertical (Acento / Modulación)
-    else if (aspectRatio < 0.45 && strokeHeight > height * 0.5) {
+    // 3. Línea vertical (Acento / Modulación de filtro)
+    else if (aspectRatio < 0.65 && strokeHeight > height * 0.45) {
       gestureType = 'accent';
       confidence = 0.90;
     }
-    // 4. Punto o círculo estándar (Trigger)
+    // 4. Punto o trazo circular (Trigger / Staccato)
     else {
       gestureType = 'trigger';
       confidence = 0.88;

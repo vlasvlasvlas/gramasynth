@@ -2,227 +2,216 @@
   <defs>
     <style>
       .bg { fill: #ffffff; stroke: #000000; stroke-width: 0.5; }
-      .cut-line { stroke: #999999; stroke-dasharray: 2,2; stroke-width: 0.3; }
       .marker { fill: #000000; }
       .block-border { fill: none; stroke: #000000; stroke-width: 0.8; }
-      .band-divider { stroke: #000000; stroke-width: 0.6; stroke-dasharray: 1,1; }
-      .grid-line { stroke: #dddddd; stroke-width: 0.25; }
-      .grid-beat { stroke: #aaaaaa; stroke-width: 0.4; }
-      .label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; font-size: 2.2px; fill: #555555; }
-      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; font-size: 2.8px; font-weight: bold; fill: #000000; }
-      .note-on { fill: #111111; stroke: #000000; stroke-width: 0.1; }
-      .note-sustain { fill: #111111; rx: 0.8; ry: 0.8; }
-      .note-accent { fill: #111111; }
+      .band-divider { stroke: #000000; stroke-width: 0.6; stroke-dasharray: 1.5,1.5; }
+      .lane-line { stroke: #e2e8f0; stroke-width: 0.35; }
+      .beat-line { stroke: #cbd5e1; stroke-width: 0.3; stroke-dasharray: 0.8,1.2; }
+      .label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; font-size: 2px; fill: #64748b; }
+      .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; font-size: 2.8px; font-weight: bold; fill: #0f172a; }
+      .note-on { fill: #000000; }
     </style>
   </defs>
 
-  <!-- Fondo de la tira completa: 1000 mm x 60 mm con margen de corte de 5 mm -->
+  <!-- Fondo de la tira continua: 1000 mm x 60 mm con margen de corte -->
   <rect x="5" y="5" width="1000" height="60" class="bg" />
 
-  <!-- Línea divisoria central en Y = 35 (30 mm arriba: Melodía, 30 mm abajo: Ritmo) -->
+  <!-- Línea divisoria central en Y = 35 (30 mm Melodía, 30 mm Ritmo) -->
   <line x1="5" y1="35" x2="1005" y2="35" class="band-divider" />
 
-  <!-- Generamos los 10 bloques de 96 mm con 4 mm de separación (Total bloque = 100 mm) -->
-  
-  <!-- ==================== BLOQUE 1: TEMPLATE 01 - BASIC BEAT & BASS ==================== -->
+  <!-- ==================== BLOQUE 1: EL HORIZONTE Y EL PULSO ==================== -->
   <g transform="translate(8, 7)">
-    <!-- Marcadores de Registro en 4 esquinas (diámetro 3 mm) -->
-    <rect x="0" y="0" width="3" height="3" class="marker" />
-    <rect x="93" y="0" width="3" height="3" class="marker" />
-    <rect x="0" y="53" width="3" height="3" class="marker" />
-    <rect x="93" y="53" width="3" height="3" class="marker" />
-
-    <!-- Borde del Bloque -->
+    <rect x="0" y="0" width="4" height="4" class="marker" />
+    <rect x="92" y="0" width="4" height="4" class="marker" />
+    <rect x="0" y="52" width="4" height="4" class="marker" />
+    <rect x="92" y="52" width="4" height="4" class="marker" />
     <rect x="0" y="0" width="96" height="56" class="block-border" />
     <line x1="0" y1="28" x2="96" y2="28" class="band-divider" />
+    <text x="6" y="-1.5" class="title">B1: EL HORIZONTE & EL PULSO (SUSTAIN)</text>
+    
+    <!-- Línea horizontal continua sostenida de Sol -->
+    <rect x="8" y="19" width="80" height="3" rx="1.5" class="note-on" />
+    <circle cx="28" cy="11" r="1.8" class="note-on" />
+    <circle cx="68" cy="11" r="1.8" class="note-on" />
 
-    <!-- Rótulo del Bloque -->
-    <text x="5" y="-1.5" class="title">B1: TEMPLATE 01 — 4-ON-THE-FLOOR</text>
-    <text x="5" y="2.5" class="label">▲ MELODÍA (30mm)</text>
-    <text x="5" y="30.5" class="label">▼ RITMO (30mm)</text>
-
-    <!-- Grilla 16 columnas x 8 filas (celdas de 6mm x 7mm) -->
-    <!-- Columnas 0..15 -->
-    <!-- Pasos rítmicos: Kick en 0, 4, 8, 12 (fila 7) -->
-    <rect x="2" y="50" width="4" height="4" class="note-on" />
-    <rect x="26" y="50" width="4" height="4" class="note-on" />
-    <rect x="50" y="50" width="4" height="4" class="note-on" />
-    <rect x="74" y="50" width="4" height="4" class="note-on" />
-
-    <!-- Snare en 4, 12 (fila 6) -->
-    <circle cx="28" cy="45.5" r="2" class="note-on" />
-    <circle cx="76" cy="45.5" r="2" class="note-on" />
-
-    <!-- Closed Hat en 2, 6, 10, 14 (fila 5) -->
-    <circle cx="16" cy="38.5" r="1.5" class="note-on" />
-    <circle cx="40" cy="38.5" r="1.5" class="note-on" />
-    <circle cx="64" cy="38.5" r="1.5" class="note-on" />
-    <circle cx="88" cy="38.5" r="1.5" class="note-on" />
-
-    <!-- Bajo Melódico con Sustain: Líneas horizontales en fila 3 -->
-    <rect x="2" y="22" width="10" height="3" class="note-sustain" />
-    <rect x="26" y="22" width="10" height="3" class="note-sustain" />
-    <rect x="50" y="15" width="10" height="3" class="note-sustain" />
-    <rect x="74" y="22" width="10" height="3" class="note-sustain" />
+    <!-- 4 Bombos en negra + Cajas + Hats -->
+    <rect x="8" y="49" width="6" height="5" rx="1" class="note-on" />
+    <rect x="28" y="49" width="6" height="5" rx="1" class="note-on" />
+    <rect x="48" y="49" width="6" height="5" rx="1" class="note-on" />
+    <rect x="68" y="49" width="6" height="5" rx="1" class="note-on" />
+    <circle cx="28" cy="42" r="2.2" class="note-on" />
+    <circle cx="68" cy="42" r="2.2" class="note-on" />
+    <circle cx="18" cy="35" r="1.4" class="note-on" /><circle cx="38" cy="35" r="1.4" class="note-on" />
+    <circle cx="58" cy="35" r="1.4" class="note-on" /><circle cx="78" cy="35" r="1.4" class="note-on" />
   </g>
 
-  <!-- ==================== BLOQUE 2: TEMPLATE 02 - SYNCOPATED GROOVE ==================== -->
+  <!-- ==================== BLOQUE 2: LA MONTAÑA RUSA ==================== -->
   <g transform="translate(108, 7)">
-    <rect x="0" y="0" width="3" height="3" class="marker" />
-    <rect x="93" y="0" width="3" height="3" class="marker" />
-    <rect x="0" y="53" width="3" height="3" class="marker" />
-    <rect x="93" y="53" width="3" height="3" class="marker" />
+    <rect x="0" y="0" width="4" height="4" class="marker" />
+    <rect x="92" y="0" width="4" height="4" class="marker" />
+    <rect x="0" y="52" width="4" height="4" class="marker" />
+    <rect x="92" y="52" width="4" height="4" class="marker" />
     <rect x="0" y="0" width="96" height="56" class="block-border" />
     <line x1="0" y1="28" x2="96" y2="28" class="band-divider" />
-    <text x="5" y="-1.5" class="title">B2: TEMPLATE 02 — SÍNCOPA & ARP</text>
-    <!-- Kick syncopated: 0, 3, 8, 11 -->
-    <rect x="2" y="50" width="4" height="4" class="note-on" />
-    <rect x="20" y="50" width="4" height="4" class="note-on" />
-    <rect x="50" y="50" width="4" height="4" class="note-on" />
-    <rect x="68" y="50" width="4" height="4" class="note-on" />
-    <!-- Snare: 4, 12 -->
-    <circle cx="28" cy="45.5" r="2" class="note-on" />
-    <circle cx="76" cy="45.5" r="2" class="note-on" />
-    <!-- Arpegio melódico ascendente escalonado -->
-    <circle cx="4" cy="23.5" r="1.8" class="note-on" />
-    <circle cx="10" cy="16.5" r="1.8" class="note-on" />
-    <circle cx="16" cy="9.5" r="1.8" class="note-on" />
-    <circle cx="22" cy="2.5" r="1.8" class="note-on" />
-    <circle cx="28" cy="9.5" r="1.8" class="note-on" />
-    <circle cx="34" cy="16.5" r="1.8" class="note-on" />
-    <circle cx="40" cy="23.5" r="1.8" class="note-on" />
-    <circle cx="46" cy="16.5" r="1.8" class="note-on" />
+    <text x="6" y="-1.5" class="title">B2: LA MONTAÑA RUSA (ARPEGIO / ONDA)</text>
+    
+    <!-- Curva continua que sube y baja -->
+    <path d="M 8 24 Q 18 8, 28 24 T 48 24 T 68 24 T 84 10" fill="none" stroke="#000" stroke-width="2.8" stroke-linecap="round"/>
+    <circle cx="18" cy="11" r="2.2" class="note-on" /><circle cx="38" cy="11" r="2.2" class="note-on" />
+    <circle cx="58" cy="11" r="2.2" class="note-on" /><circle cx="84" cy="10" r="2.5" class="note-on" />
+
+    <!-- Ritmo quebrado -->
+    <rect x="8" y="49" width="5.5" height="4.5" rx="1" class="note-on" />
+    <rect x="23" y="49" width="5.5" height="4.5" rx="1" class="note-on" />
+    <rect x="48" y="49" width="5.5" height="4.5" rx="1" class="note-on" />
+    <rect x="63" y="49" width="5.5" height="4.5" rx="1" class="note-on" />
+    <circle cx="38" cy="42" r="2.2" class="note-on" /><circle cx="78" cy="42" r="2.2" class="note-on" />
   </g>
 
-  <!-- ==================== BLOQUE 3: TEMPLATE 03 - AMBIENT SUSTAIN ==================== -->
+  <!-- ==================== BLOQUE 3: LA LLUVIA DE GOTAS ==================== -->
   <g transform="translate(208, 7)">
-    <rect x="0" y="0" width="3" height="3" class="marker" />
-    <rect x="93" y="0" width="3" height="3" class="marker" />
-    <rect x="0" y="53" width="3" height="3" class="marker" />
-    <rect x="93" y="53" width="3" height="3" class="marker" />
+    <rect x="0" y="0" width="4" height="4" class="marker" />
+    <rect x="92" y="0" width="4" height="4" class="marker" />
+    <rect x="0" y="52" width="4" height="4" class="marker" />
+    <rect x="92" y="52" width="4" height="4" class="marker" />
     <rect x="0" y="0" width="96" height="56" class="block-border" />
     <line x1="0" y1="28" x2="96" y2="28" class="band-divider" />
-    <text x="5" y="-1.5" class="title">B3: TEMPLATE 03 — AMBIENT PADS</text>
-    <!-- Melodía con largas notas ligadas (Sustain continuo) -->
-    <rect x="2" y="8" width="44" height="3.5" class="note-sustain" />
-    <rect x="50" y="15" width="44" height="3.5" class="note-sustain" />
-    <!-- Percusión mínima y micro-clicks -->
-    <circle cx="4" cy="38.5" r="1.2" class="note-on" />
-    <circle cx="28" cy="38.5" r="1.2" class="note-on" />
-    <circle cx="52" cy="38.5" r="1.2" class="note-on" />
-    <circle cx="76" cy="38.5" r="1.2" class="note-on" />
+    <text x="6" y="-1.5" class="title">B3: LA LLUVIA DE GOTAS (STACCATO)</text>
+    
+    <!-- Nube de gotas melódicas -->
+    <circle cx="10" cy="12" r="1.8" class="note-on" /><circle cx="18" cy="22" r="1.8" class="note-on" />
+    <circle cx="26" cy="16" r="1.8" class="note-on" /><circle cx="34" cy="9" r="2.2" class="note-on" />
+    <circle cx="42" cy="21" r="1.8" class="note-on" /><circle cx="50" cy="14" r="1.8" class="note-on" />
+    <circle cx="58" cy="24" r="1.8" class="note-on" /><circle cx="66" cy="11" r="2.2" class="note-on" />
+    <circle cx="74" cy="18" r="1.8" class="note-on" /><circle cx="82" cy="13" r="1.8" class="note-on" />
+
+    <!-- Gotas percusivas -->
+    <circle cx="10" cy="51" r="2.6" class="note-on" /><circle cx="28" cy="36" r="1.6" class="note-on" />
+    <circle cx="34" cy="43" r="2.0" class="note-on" /><circle cx="50" cy="51" r="2.6" class="note-on" />
+    <circle cx="66" cy="36" r="1.6" class="note-on" /><circle cx="72" cy="43" r="2.0" class="note-on" />
   </g>
 
-  <!-- ==================== BLOQUE 4: TEMPLATE 04 - ELECTRO ACID ==================== -->
+  <!-- ==================== BLOQUE 4: EL TOBOGÁN ACID ==================== -->
   <g transform="translate(308, 7)">
-    <rect x="0" y="0" width="3" height="3" class="marker" />
-    <rect x="93" y="0" width="3" height="3" class="marker" />
-    <rect x="0" y="53" width="3" height="3" class="marker" />
-    <rect x="93" y="53" width="3" height="3" class="marker" />
+    <rect x="0" y="0" width="4" height="4" class="marker" />
+    <rect x="92" y="0" width="4" height="4" class="marker" />
+    <rect x="0" y="52" width="4" height="4" class="marker" />
+    <rect x="92" y="52" width="4" height="4" class="marker" />
     <rect x="0" y="0" width="96" height="56" class="block-border" />
     <line x1="0" y1="28" x2="96" y2="28" class="band-divider" />
-    <text x="5" y="-1.5" class="title">B4: TEMPLATE 04 — ELECTRO ACID & ACCENTS</text>
-    <!-- Kick continuo -->
-    <rect x="2" y="50" width="4" height="4" class="note-on" />
-    <rect x="26" y="50" width="4" height="4" class="note-on" />
-    <rect x="50" y="50" width="4" height="4" class="note-on" />
-    <rect x="74" y="50" width="4" height="4" class="note-on" />
-    <!-- Líneas verticales de ACENTO en bajo -->
-    <line x1="16" y1="18" x2="16" y2="26" stroke="#000" stroke-width="2.5" />
-    <line x1="40" y1="18" x2="40" y2="26" stroke="#000" stroke-width="2.5" />
-    <line x1="64" y1="11" x2="64" y2="19" stroke="#000" stroke-width="2.5" />
-    <line x1="88" y1="4" x2="88" y2="12" stroke="#000" stroke-width="2.5" />
+    <text x="6" y="-1.5" class="title">B4: EL TOBOGÁN ACID & ACENTOS</text>
+    
+    <!-- Rampas diagonales + Acentos verticales -->
+    <line x1="10" y1="11" x2="32" y2="25" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+    <rect x="38" y="10" width="2.6" height="15" rx="0.6" class="note-on" />
+    <line x1="48" y1="25" x2="70" y2="11" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+    <rect x="76" y="10" width="2.6" height="15" rx="0.6" class="note-on" />
+
+    <rect x="10" y="49" width="6" height="4.5" rx="0.8" class="note-on" />
+    <rect x="30" y="49" width="6" height="4.5" rx="0.8" class="note-on" />
+    <rect x="50" y="49" width="6" height="4.5" rx="0.8" class="note-on" />
+    <rect x="70" y="49" width="6" height="4.5" rx="0.8" class="note-on" />
   </g>
 
-  <!-- ==================== BLOQUE 5: TEMPLATE 05 - POLIRRITMIA ==================== -->
+  <!-- ==================== BLOQUE 5: LA TORMENTA ==================== -->
   <g transform="translate(408, 7)">
-    <rect x="0" y="0" width="3" height="3" class="marker" />
-    <rect x="93" y="0" width="3" height="3" class="marker" />
-    <rect x="0" y="53" width="3" height="3" class="marker" />
-    <rect x="93" y="53" width="3" height="3" class="marker" />
+    <rect x="0" y="0" width="4" height="4" class="marker" />
+    <rect x="92" y="0" width="4" height="4" class="marker" />
+    <rect x="0" y="52" width="4" height="4" class="marker" />
+    <rect x="92" y="52" width="4" height="4" class="marker" />
     <rect x="0" y="0" width="96" height="56" class="block-border" />
     <line x1="0" y1="28" x2="96" y2="28" class="band-divider" />
-    <text x="5" y="-1.5" class="title">B5: TEMPLATE 05 — POLIRRITMO 3 CONTRA 4</text>
-    <!-- Tresillos rítmicos en percusión -->
-    <circle cx="4" cy="52" r="1.8" class="note-on" />
-    <circle cx="20" cy="52" r="1.8" class="note-on" />
-    <circle cx="36" cy="52" r="1.8" class="note-on" />
-    <circle cx="52" cy="52" r="1.8" class="note-on" />
-    <circle cx="68" cy="52" r="1.8" class="note-on" />
-    <circle cx="84" cy="52" r="1.8" class="note-on" />
-    <!-- Melodía pentatónica en contrapunto -->
-    <rect x="2" y="22" width="8" height="3" class="note-sustain" />
-    <rect x="32" y="15" width="8" height="3" class="note-sustain" />
-    <rect x="62" y="8" width="8" height="3" class="note-sustain" />
+    <text x="6" y="-1.5" class="title">B5: LA TORMENTA (MANCHAS & NOISE)</text>
+    
+    <!-- Bloques gruesos saturados -->
+    <rect x="8" y="13" width="24" height="5" rx="1.2" class="note-on" />
+    <rect x="38" y="20" width="24" height="5" rx="1.2" class="note-on" />
+    <rect x="68" y="10" width="18" height="7" rx="1.2" class="note-on" />
+
+    <rect x="8" y="48" width="8" height="6" rx="1" class="note-on" />
+    <rect x="22" y="48" width="8" height="6" rx="1" class="note-on" />
+    <rect x="36" y="48" width="8" height="6" rx="1" class="note-on" />
+    <rect x="50" y="48" width="8" height="6" rx="1" class="note-on" />
+    <rect x="64" y="48" width="22" height="6" rx="1" class="note-on" />
   </g>
 
-  <!-- ==================== BLOQUES 6 A 10: CAJONES LIBRES PARA DIBUJAR ==================== -->
-  <!-- B6: Espacio Libre 1 -->
+  <!-- ==================== BLOQUES 6 A 10: LIENZOS LIBRES PARA DIBUJAR ==================== -->
+  <!-- B6: Lienzo Libre 1 -->
   <g transform="translate(508, 7)">
-    <rect x="0" y="0" width="3" height="3" class="marker" />
-    <rect x="93" y="0" width="3" height="3" class="marker" />
-    <rect x="0" y="53" width="3" height="3" class="marker" />
-    <rect x="93" y="53" width="3" height="3" class="marker" />
+    <rect x="0" y="0" width="4" height="4" class="marker" />
+    <rect x="92" y="0" width="4" height="4" class="marker" />
+    <rect x="0" y="52" width="4" height="4" class="marker" />
+    <rect x="92" y="52" width="4" height="4" class="marker" />
     <rect x="0" y="0" width="96" height="56" class="block-border" />
     <line x1="0" y1="28" x2="96" y2="28" class="band-divider" />
-    <text x="5" y="-1.5" class="title">B6: ESPACIO LIBRE 01 [DIBUJA AQUÍ]</text>
-    <!-- Guía punteada sutil para celdas -->
-    <!-- 16 columnas x 8 filas (puntos guía suaves) -->
-    <g fill="#cccccc">
-      <circle cx="4" cy="4" r="0.4" /><circle cx="10" cy="4" r="0.4" /><circle cx="16" cy="4" r="0.4" /><circle cx="22" cy="4" r="0.4" />
-      <circle cx="28" cy="4" r="0.4" /><circle cx="34" cy="4" r="0.4" /><circle cx="40" cy="4" r="0.4" /><circle cx="46" cy="4" r="0.4" />
-      <circle cx="52" cy="4" r="0.4" /><circle cx="58" cy="4" r="0.4" /><circle cx="64" cy="4" r="0.4" /><circle cx="70" cy="4" r="0.4" />
-      <circle cx="76" cy="4" r="0.4" /><circle cx="82" cy="4" r="0.4" /><circle cx="88" cy="4" r="0.4" /><circle cx="94" cy="4" r="0.4" />
-      
-      <circle cx="4" cy="32" r="0.4" /><circle cx="10" cy="32" r="0.4" /><circle cx="16" cy="32" r="0.4" /><circle cx="22" cy="32" r="0.4" />
-      <circle cx="28" cy="32" r="0.4" /><circle cx="34" cy="32" r="0.4" /><circle cx="40" cy="32" r="0.4" /><circle cx="46" cy="32" r="0.4" />
-      <circle cx="52" cy="32" r="0.4" /><circle cx="58" cy="32" r="0.4" /><circle cx="64" cy="32" r="0.4" /><circle cx="70" cy="32" r="0.4" />
-      <circle cx="76" cy="32" r="0.4" /><circle cx="82" cy="32" r="0.4" /><circle cx="88" cy="32" r="0.4" /><circle cx="94" cy="32" r="0.4" />
-    </g>
+    <text x="6" y="-1.5" class="title">B6: TU DIBUJO LIBRE 01 ✍️</text>
+    <!-- Carriles de pentagrama suave -->
+    <line x1="6" y1="10" x2="90" y2="10" class="lane-line" /><line x1="6" y1="15" x2="90" y2="15" class="lane-line" />
+    <line x1="6" y1="20" x2="90" y2="20" class="lane-line" /><line x1="6" y1="25" x2="90" y2="25" class="lane-line" />
+    <line x1="6" y1="36" x2="90" y2="36" class="lane-line" /><line x1="6" y1="43" x2="90" y2="43" class="lane-line" />
+    <line x1="6" y1="51" x2="90" y2="51" class="lane-line" />
+    <line x1="28" y1="6" x2="28" y2="54" class="beat-line" /><line x1="50" y1="6" x2="50" y2="54" class="beat-line" />
+    <line x1="72" y1="6" x2="72" y2="54" class="beat-line" />
   </g>
 
-  <!-- B7: Espacio Libre 2 -->
+  <!-- B7: Lienzo Libre 2 -->
   <g transform="translate(608, 7)">
-    <rect x="0" y="0" width="3" height="3" class="marker" />
-    <rect x="93" y="0" width="3" height="3" class="marker" />
-    <rect x="0" y="53" width="3" height="3" class="marker" />
-    <rect x="93" y="53" width="3" height="3" class="marker" />
+    <rect x="0" y="0" width="4" height="4" class="marker" />
+    <rect x="92" y="0" width="4" height="4" class="marker" />
+    <rect x="0" y="52" width="4" height="4" class="marker" />
+    <rect x="92" y="52" width="4" height="4" class="marker" />
     <rect x="0" y="0" width="96" height="56" class="block-border" />
     <line x1="0" y1="28" x2="96" y2="28" class="band-divider" />
-    <text x="5" y="-1.5" class="title">B7: ESPACIO LIBRE 02 [DIBUJA AQUÍ]</text>
+    <text x="6" y="-1.5" class="title">B7: TU DIBUJO LIBRE 02 ✍️</text>
+    <line x1="6" y1="10" x2="90" y2="10" class="lane-line" /><line x1="6" y1="15" x2="90" y2="15" class="lane-line" />
+    <line x1="6" y1="20" x2="90" y2="20" class="lane-line" /><line x1="6" y1="25" x2="90" y2="25" class="lane-line" />
+    <line x1="6" y1="36" x2="90" y2="36" class="lane-line" /><line x1="6" y1="43" x2="90" y2="43" class="lane-line" /><line x1="6" y1="51" x2="90" y2="51" class="lane-line" />
+    <line x1="28" y1="6" x2="28" y2="54" class="beat-line" /><line x1="50" y1="6" x2="50" y2="54" class="beat-line" /><line x1="72" y1="6" x2="72" y2="54" class="beat-line" />
   </g>
 
-  <!-- B8: Espacio Libre 3 -->
+  <!-- B8: Lienzo Libre 3 -->
   <g transform="translate(708, 7)">
-    <rect x="0" y="0" width="3" height="3" class="marker" />
-    <rect x="93" y="0" width="3" height="3" class="marker" />
-    <rect x="0" y="53" width="3" height="3" class="marker" />
-    <rect x="93" y="53" width="3" height="3" class="marker" />
+    <rect x="0" y="0" width="4" height="4" class="marker" />
+    <rect x="92" y="0" width="4" height="4" class="marker" />
+    <rect x="0" y="52" width="4" height="4" class="marker" />
+    <rect x="92" y="52" width="4" height="4" class="marker" />
     <rect x="0" y="0" width="96" height="56" class="block-border" />
     <line x1="0" y1="28" x2="96" y2="28" class="band-divider" />
-    <text x="5" y="-1.5" class="title">B8: ESPACIO LIBRE 03 [DIBUJA AQUÍ]</text>
+    <text x="6" y="-1.5" class="title">B8: TU DIBUJO LIBRE 03 ✍️</text>
+    <line x1="6" y1="10" x2="90" y2="10" class="lane-line" /><line x1="6" y1="15" x2="90" y2="15" class="lane-line" />
+    <line x1="6" y1="20" x2="90" y2="20" class="lane-line" /><line x1="6" y1="25" x2="90" y2="25" class="lane-line" />
+    <line x1="6" y1="36" x2="90" y2="36" class="lane-line" /><line x1="6" y1="43" x2="90" y2="43" class="lane-line" /><line x1="6" y1="51" x2="90" y2="51" class="lane-line" />
+    <line x1="28" y1="6" x2="28" y2="54" class="beat-line" /><line x1="50" y1="6" x2="50" y2="54" class="beat-line" /><line x1="72" y1="6" x2="72" y2="54" class="beat-line" />
   </g>
 
-  <!-- B9: Espacio Libre 4 -->
+  <!-- B9: Lienzo Libre 4 -->
   <g transform="translate(808, 7)">
-    <rect x="0" y="0" width="3" height="3" class="marker" />
-    <rect x="93" y="0" width="3" height="3" class="marker" />
-    <rect x="0" y="53" width="3" height="3" class="marker" />
-    <rect x="93" y="53" width="3" height="3" class="marker" />
+    <rect x="0" y="0" width="4" height="4" class="marker" />
+    <rect x="92" y="0" width="4" height="4" class="marker" />
+    <rect x="0" y="52" width="4" height="4" class="marker" />
+    <rect x="92" y="52" width="4" height="4" class="marker" />
     <rect x="0" y="0" width="96" height="56" class="block-border" />
     <line x1="0" y1="28" x2="96" y2="28" class="band-divider" />
-    <text x="5" y="-1.5" class="title">B9: ESPACIO LIBRE 04 [DIBUJA AQUÍ]</text>
+    <text x="6" y="-1.5" class="title">B9: TU DIBUJO LIBRE 04 ✍️</text>
+    <line x1="6" y1="10" x2="90" y2="10" class="lane-line" /><line x1="6" y1="15" x2="90" y2="15" class="lane-line" />
+    <line x1="6" y1="20" x2="90" y2="20" class="lane-line" /><line x1="6" y1="25" x2="90" y2="25" class="lane-line" />
+    <line x1="6" y1="36" x2="90" y2="36" class="lane-line" /><line x1="6" y1="43" x2="90" y2="43" class="lane-line" /><line x1="6" y1="51" x2="90" y2="51" class="lane-line" />
+    <line x1="28" y1="6" x2="28" y2="54" class="beat-line" /><line x1="50" y1="6" x2="50" y2="54" class="beat-line" /><line x1="72" y1="6" x2="72" y2="54" class="beat-line" />
   </g>
 
-  <!-- B10: Espacio Libre 5 -->
+  <!-- B10: Lienzo Libre 5 -->
   <g transform="translate(908, 7)">
-    <rect x="0" y="0" width="3" height="3" class="marker" />
-    <rect x="93" y="0" width="3" height="3" class="marker" />
-    <rect x="0" y="53" width="3" height="3" class="marker" />
-    <rect x="93" y="53" width="3" height="3" class="marker" />
+    <rect x="0" y="0" width="4" height="4" class="marker" />
+    <rect x="92" y="0" width="4" height="4" class="marker" />
+    <rect x="0" y="52" width="4" height="4" class="marker" />
+    <rect x="92" y="52" width="4" height="4" class="marker" />
     <rect x="0" y="0" width="96" height="56" class="block-border" />
     <line x1="0" y1="28" x2="96" y2="28" class="band-divider" />
-    <text x="5" y="-1.5" class="title">B10: ESPACIO LIBRE 05 [DIBUJA AQUÍ]</text>
+    <text x="6" y="-1.5" class="title">B10: TU DIBUJO LIBRE 05 ✍️</text>
+    <line x1="6" y1="10" x2="90" y2="10" class="lane-line" /><line x1="6" y1="15" x2="90" y2="15" class="lane-line" />
+    <line x1="6" y1="20" x2="90" y2="20" class="lane-line" /><line x1="6" y1="25" x2="90" y2="25" class="lane-line" />
+    <line x1="6" y1="36" x2="90" y2="36" class="lane-line" /><line x1="6" y1="43" x2="90" y2="43" class="lane-line" /><line x1="6" y1="51" x2="90" y2="51" class="lane-line" />
+    <line x1="28" y1="6" x2="28" y2="54" class="beat-line" /><line x1="50" y1="6" x2="50" y2="54" class="beat-line" /><line x1="72" y1="6" x2="72" y2="54" class="beat-line" />
   </g>
 
 </svg>
