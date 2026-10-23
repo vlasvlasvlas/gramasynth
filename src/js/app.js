@@ -8,6 +8,7 @@ import { StateMachine, EngineState } from './core/state_machine.js';
 import { CameraManager } from './vision/camera.js';
 import { HomographyTransformer } from './vision/homography.js';
 import { GridDetector } from './vision/grid_detector.js';
+import { CornerDetector } from './vision/corner_detector.js';
 import { SequencerView } from './ui/sequencer_view.js';
 
 class App {
@@ -30,6 +31,12 @@ class App {
 
     this.btnCamera = document.getElementById('btnCamera');
     this.btnMirror = document.getElementById('btnMirror');
+    this.btnFlipV = document.getElementById('btnFlipV');
+    this.btnAutoCorner = document.getElementById('btnAutoCorner');
+    this.btnResetPins = document.getElementById('btnResetPins');
+    this.autoTrackCheck = document.getElementById('autoTrackCheck');
+    this.cornerDetectStatus = document.getElementById('cornerDetectStatus');
+
     this.btnCapture = document.getElementById('btnCapture');
     this.btnPlay = document.getElementById('btnPlay');
     this.btnAccept = document.getElementById('btnAccept');
@@ -60,8 +67,10 @@ class App {
 
     // Patrón detectado en vivo (último frame analizado)
     this.liveDetectedPattern = null;
+    this.frameCount = 0;
 
     // 4 Corner Pins para la homografía interactiva (normalizados 0..1)
+    // 0: TL, 1: TR, 2: BR, 3: BL
     this.cornerPins = [
       { x: 0.20, y: 0.25 }, // Top-Left
       { x: 0.80, y: 0.25 }, // Top-Right
@@ -133,8 +142,24 @@ class App {
       }
     });
 
+    // Inversión Horizontal (Espejo)
     this.btnMirror.addEventListener('click', () => {
       this.cameraManager.toggleMirror();
+    });
+
+    // Inversión Vertical
+    this.btnFlipV.addEventListener('click', () => {
+      this.cameraManager.toggleFlipV();
+    });
+
+    // Auto-ajuste de esquinas
+    this.btnAutoCorner.addEventListener('click', () => {
+      this.autoDetectCorners(true);
+    });
+
+    // Reset / Centrar pines
+    this.btnResetPins.addEventListener('click', () => {
+      this.resetPins();
     });
 
     this.cameraSelect.addEventListener('change', async () => {
@@ -238,6 +263,46 @@ class App {
     });
   }
 
+  resetPins() {
+    this.cornerPins = [
+      { x: 0.20, y: 0.25 }, // Top-Left
+      { x: 0.80, y: 0.25 }, // Top-Right
+      { x: 0.85, y: 0.80 }, // Bottom-Right
+      { x: 0.15, y: 0.80 }  // Bottom-Left
+    ];
+    this.cornerDetectStatus.textContent = "Pines centrados";
+    this.cornerDetectStatus.style.color = "#94a3b8";
+    this.drawPins();
+  }
+
+  autoDetectCorners(interactive = false) {
+    if (!this.cameraManager.stream || this.video.readyState < 2) {
+      if (interactive) {
+        this.cornerDetectStatus.textContent = "⚠ Activa la cámara primero";
+        this.cornerDetectStatus.style.color = "#f59e0b";
+      }
+      return false;
+    }
+
+    const frameData = this.cameraManager.captureFrame(this.rawCanvas);
+    if (!frameData) return false;
+
+    const detected = CornerDetector.detectCorners(frameData, this.cornerPins);
+    if (detected) {
+      this.cornerPins = detected;
+      this.drawPins();
+      this.cornerDetectStatus.textContent = "✓ Esquinas auto-ajustadas";
+      this.cornerDetectStatus.style.color = "#10b981";
+      return true;
+    } else {
+      if (interactive) {
+        this.cornerDetectStatus.textContent = "⚠ No se detectó el bloque (centra el papel)";
+        this.cornerDetectStatus.style.color = "#f59e0b";
+      }
+      return false;
+    }
+  }
+
   captureToPreview() {
     if (this.liveDetectedPattern) {
       this.stateMachine.setPreview(this.liveDetectedPattern.clone());
@@ -304,10 +369,10 @@ class App {
 
     const points = this.cornerPins.map(p => ({ x: p.x * w, y: p.y * h }));
 
-    // Polígono de delimitación
+    // Polígono de delimitación de la zona de dibujo
     ctx.strokeStyle = '#00f0ff';
     ctx.lineWidth = 2;
-    ctx.setLineDash([4, 4]);
+    ctx.setLineDash([5, 5]);
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     for (let i = 1; i < 4; i++) ctx.lineTo(points[i].x, points[i].y);
@@ -315,23 +380,70 @@ class App {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Dibujar los 4 pines de esquina
+    // Línea guía central (división melódica / rítmica de 3cm)
+    const midLeftX = (points[0].x + points[3].x) / 2;
+    const midLeftY = (points[0].y + points[3].y) / 2;
+    const midRightX = (points[1].x + points[2].x) / 2;
+    const midRightY = (points[1].y + points[2].y) / 2;
+
+    ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 2]);
+    ctx.beginPath();
+    ctx.moveTo(midLeftX, midLeftY);
+    ctx.lineTo(midRightX, midRightY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Dibujar los 4 pines de esquina interactivos
+    const pinNames = ['TL', 'TR', 'BR', 'BL'];
     const colors = ['#10b981', '#38bdf8', '#f59e0b', '#ec4899'];
+
     points.forEach((p, i) => {
+      // Círculo exterior
       ctx.fillStyle = colors[i];
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = '#fff';
+
+      // Borde blanco de alto contraste
+      ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Cruz central
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(p.x - 4, p.y);
+      ctx.lineTo(p.x + 4, p.y);
+      ctx.moveTo(p.x, p.y - 4);
+      ctx.lineTo(p.x, p.y + 4);
       ctx.stroke();
     });
   }
 
   videoProcessingLoop() {
+    this.frameCount++;
+
     if (this.cameraManager.stream && this.video.readyState >= 2) {
       const frameData = this.cameraManager.captureFrame(this.rawCanvas);
       if (frameData) {
+        // Auto-seguimiento si está activado (evaluado cada 6 frames)
+        if (this.autoTrackCheck.checked && this.frameCount % 6 === 0) {
+          const detected = CornerDetector.detectCorners(frameData, this.cornerPins);
+          if (detected) {
+            // Suavizado / interpolación exponencial (LERP) para evitar saltos bruscos
+            for (let i = 0; i < 4; i++) {
+              this.cornerPins[i].x += (detected[i].x - this.cornerPins[i].x) * 0.25;
+              this.cornerPins[i].y += (detected[i].y - this.cornerPins[i].y) * 0.25;
+            }
+            this.drawPins();
+            this.cornerDetectStatus.textContent = "✓ Auto-siguiendo bloque";
+            this.cornerDetectStatus.style.color = "#10b981";
+          }
+        }
+
         // 1. Homografía: Rectificación perspectiva hacia warpCanvas
         const srcPoints = this.cornerPins.map(p => ({
           x: p.x * frameData.width,

@@ -1,14 +1,16 @@
 /**
  * Gramasynth ROLLITO — Camera Manager
- * Gestión de MediaStream, listado de dispositivos y captura de fotogramas
+ * Gestión de MediaStream, listado de dispositivos, captura de fotogramas e inversión H/V
  */
 
 export class CameraManager {
   constructor(videoElement) {
     this.video = videoElement;
     this.stream = null;
-    this.isMirrored = true;
+    this.isMirrored = true;  // Inversión Horizontal (Espejo)
+    this.isFlippedV = false;  // Inversión Vertical
     this.activeDeviceId = null;
+    this.updateTransform();
   }
 
   async getDevices() {
@@ -36,6 +38,7 @@ export class CameraManager {
     this.video.srcObject = this.stream;
     await this.video.play();
     this.activeDeviceId = deviceId;
+    this.updateTransform();
   }
 
   stop() {
@@ -47,11 +50,22 @@ export class CameraManager {
 
   toggleMirror() {
     this.isMirrored = !this.isMirrored;
-    this.video.style.transform = this.isMirrored ? 'scaleX(-1)' : 'scaleX(1)';
+    this.updateTransform();
+  }
+
+  toggleFlipV() {
+    this.isFlippedV = !this.isFlippedV;
+    this.updateTransform();
+  }
+
+  updateTransform() {
+    const sx = this.isMirrored ? -1 : 1;
+    const sy = this.isFlippedV ? -1 : 1;
+    this.video.style.transform = `scale(${sx}, ${sy})`;
   }
 
   /**
-   * Captura el frame actual en un canvas auxiliar
+   * Captura el frame actual en un canvas auxiliar respetando las inversiones H y V
    */
   captureFrame(targetCanvas) {
     if (!this.stream || this.video.videoWidth === 0) return null;
@@ -60,15 +74,16 @@ export class CameraManager {
     targetCanvas.height = this.video.videoHeight;
     const ctx = targetCanvas.getContext('2d', { willReadFrequently: true });
 
-    if (this.isMirrored) {
-      ctx.save();
-      ctx.translate(targetCanvas.width, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(this.video, 0, 0);
-      ctx.restore();
-    } else {
-      ctx.drawImage(this.video, 0, 0);
-    }
+    const sx = this.isMirrored ? -1 : 1;
+    const sy = this.isFlippedV ? -1 : 1;
+    const tx = this.isMirrored ? targetCanvas.width : 0;
+    const ty = this.isFlippedV ? targetCanvas.height : 0;
+
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.scale(sx, sy);
+    ctx.drawImage(this.video, 0, 0);
+    ctx.restore();
 
     return ctx.getImageData(0, 0, targetCanvas.width, targetCanvas.height);
   }

@@ -23,12 +23,13 @@
   </header>
 
   <main>
-    <!-- PANEL 1: CÁMARA & RECTIFICACIÓN ÓPTICA -->
+    <!-- PANEL 1: CÁMARA & ENCUADRE ÓPTICO -->
     <div class="panel">
       <div class="panel-header">
         <h2>📹 Cámara & Encuadre Óptico</h2>
         <div class="control-group">
-          <button id="btnMirror" class="btn">⇄ Espejo</button>
+          <button id="btnMirror" class="btn" title="Invertir horizontalmente">⇄ Espejo H</button>
+          <button id="btnFlipV" class="btn" title="Invertir verticalmente">⇅ Invertir V</button>
           <button id="btnCamera" class="btn btn-primary">Activar Cámara</button>
         </div>
       </div>
@@ -46,9 +47,23 @@
             <option value="">Predeterminada</option>
           </select>
         </div>
-        <p style="font-size: 0.75rem; color: #94a3b8;">
-          Arrastra los 4 círculos de colores para calzar el bloque del rollito.
-        </p>
+
+        <button id="btnAutoCorner" class="btn" style="background: #2563eb; color: #fff; border-color: #3b82f6;" title="Detecta los 4 marcadores negros de esquina del papel automáticamente">
+          ✨ Auto-Ajustar Esquinas
+        </button>
+
+        <button id="btnResetPins" class="btn" title="Centrar los 4 pines de encuadre">
+          ↺ Centrar
+        </button>
+
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; cursor: pointer; color: #94a3b8;">
+          <input type="checkbox" id="autoTrackCheck">
+          Auto-seguir
+        </label>
+
+        <span id="cornerDetectStatus" style="margin-left: auto; font-size: 0.75rem; color: #94a3b8;">
+          Pines ajustables
+        </span>
       </div>
     </div>
 
