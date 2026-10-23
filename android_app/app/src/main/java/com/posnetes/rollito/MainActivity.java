@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
@@ -22,8 +21,8 @@ import java.util.Random;
 
 public class MainActivity extends Activity {
 
-    private static final int PRINT_WIDTH  = 384;
-    private static final int PRINT_HEIGHT = 240;
+    private static final int PRINT_WIDTH  = 240;
+    private static final int PRINT_HEIGHT = 384;
 
     // Nombres de paquete de RawBT (free y Pro tienen paquetes distintos)
     private static final String[] RAWBT_PACKAGES = {
@@ -54,13 +53,7 @@ public class MainActivity extends Activity {
 
     private void print(boolean isRandom) {
         try {
-            Bitmap raw = generateBitmap(isRandom);
-
-            // Rotar 90° para que el largo del patrón vaya a lo largo del rollo
-            Matrix m = new Matrix();
-            m.postRotate(90);
-            Bitmap bmp = Bitmap.createBitmap(raw, 0, 0, raw.getWidth(), raw.getHeight(), m, true);
-            raw.recycle();
+            Bitmap bmp = generateBitmap(isRandom);
 
             // Guardar PNG en caché externa (legible por otras apps en Android 6)
             File outDir = getExternalCacheDir();
@@ -127,6 +120,7 @@ public class MainActivity extends Activity {
     }
 
     private Bitmap generateBitmap(boolean isRandom) {
+        // Portrait: 240px wide (≈58 mm) × 384px tall (along the roll)
         Bitmap bmp = Bitmap.createBitmap(PRINT_WIDTH, PRINT_HEIGHT, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bmp);
         canvas.drawColor(Color.WHITE);
@@ -140,63 +134,74 @@ public class MainActivity extends Activity {
         p.setStrokeWidth(2);
         canvas.drawRect(6, 6, PRINT_WIDTH - 6, PRINT_HEIGHT - 6, p);
 
-        // Marcadores de esquina sólidos 24×24
-        int m = 24;
+        // Marcadores de esquina sólidos 20×20 (en las 4 esquinas del área imprimible)
+        int mk = 20;
         p.setStyle(Paint.Style.FILL);
-        canvas.drawRect(8, 8, 8 + m, 8 + m, p);
-        canvas.drawRect(PRINT_WIDTH - 8 - m, 8, PRINT_WIDTH - 8, 8 + m, p);
-        canvas.drawRect(8, PRINT_HEIGHT - 8 - m, 8 + m, PRINT_HEIGHT - 8, p);
-        canvas.drawRect(PRINT_WIDTH - 8 - m, PRINT_HEIGHT - 8 - m, PRINT_WIDTH - 8, PRINT_HEIGHT - 8, p);
+        canvas.drawRect(8, 8, 8 + mk, 8 + mk, p);                                             // TL
+        canvas.drawRect(PRINT_WIDTH - 8 - mk, 8, PRINT_WIDTH - 8, 8 + mk, p);                 // TR
+        canvas.drawRect(8, PRINT_HEIGHT - 8 - mk, 8 + mk, PRINT_HEIGHT - 8, p);               // BL
+        canvas.drawRect(PRINT_WIDTH - 8 - mk, PRINT_HEIGHT - 8 - mk, PRINT_WIDTH - 8, PRINT_HEIGHT - 8, p); // BR
 
-        // Línea divisoria central punteada (Melodía / Ritmo)
+        // Línea divisoria central horizontal (Melodía ↑ / Ritmo ↓)
+        int midY = PRINT_HEIGHT / 2;  // = 192
         p.setStyle(Paint.Style.STROKE);
         p.setPathEffect(new DashPathEffect(new float[]{4, 4}, 0));
-        canvas.drawLine(8, PRINT_HEIGHT / 2, PRINT_WIDTH - 8, PRINT_HEIGHT / 2, p);
+        canvas.drawLine(8, midY, PRINT_WIDTH - 8, midY, p);
         p.setPathEffect(null);
 
+        // Etiquetas: fuera de la zona de esquinas (debajo de TL y debajo de la línea)
         p.setStyle(Paint.Style.FILL);
         p.setTextSize(9);
-        canvas.drawText("MELODIA", 38, 38, p);
-        canvas.drawText("RITMO", 38, 134, p);
+        canvas.drawText("MELODIA", 36, 42, p);   // zona superior, tras la esquina TL
+        canvas.drawText("RITMO",   36, midY + 18, p); // zona inferior, bajo la línea
+
+        // Área de contenido: x: 36..204, melodia y: 50..182, ritmo y: 202..360
+        int cL = 36, cR = PRINT_WIDTH - 36;  // content left/right
 
         if (!isRandom) {
+            // Guías vacías para que el usuario dibuje
             p.setStyle(Paint.Style.STROKE);
             p.setColor(Color.LTGRAY);
             p.setStrokeWidth(1);
-            for (int y : new int[]{52, 70, 88, 106}) canvas.drawLine(38, y, PRINT_WIDTH - 38, y, p);
-            for (int y : new int[]{148, 168, 192, 214}) canvas.drawLine(38, y, PRINT_WIDTH - 38, y, p);
+            for (int y : new int[]{70, 95, 120, 155})  canvas.drawLine(cL, y, cR, y, p);
+            for (int y : new int[]{215, 245, 280, 320}) canvas.drawLine(cL, y, cR, y, p);
         } else {
             p.setColor(Color.BLACK);
-            p.setStyle(Paint.Style.FILL);
             Random rnd = new Random();
             switch (rnd.nextInt(3)) {
                 case 0:
-                    canvas.drawRect(40, 75, PRINT_WIDTH - 40, 87, p);
+                    // Melodía: barra sólida horizontal
+                    p.setStyle(Paint.Style.FILL);
+                    canvas.drawRect(cL, 100, cR, 115, p);
+                    // Ritmo: 4 cuadrados de beat distribuidos verticalmente
                     for (int b = 0; b < 4; b++) {
-                        int bx = 42 + b * 72;
-                        canvas.drawRect(bx, 204, bx + 20, 222, p);
+                        int by = 220 + b * 36;
+                        canvas.drawRect(cL + 10, by, cR - 10, by + 22, p);
                     }
                     break;
                 case 1:
+                    // Melodía: zigzag
                     p.setStyle(Paint.Style.STROKE);
-                    p.setStrokeWidth(8);
-                    canvas.drawLine(42, 95, 120, 55, p);
-                    canvas.drawLine(120, 55, 200, 105, p);
-                    canvas.drawLine(200, 105, 280, 55, p);
-                    canvas.drawLine(280, 55, 340, 85, p);
+                    p.setStrokeWidth(7);
+                    int w4 = (cR - cL) / 4;
+                    canvas.drawLine(cL,          130, cL + w4,     70, p);
+                    canvas.drawLine(cL + w4,      70, cL + w4*2,  130, p);
+                    canvas.drawLine(cL + w4*2,   130, cL + w4*3,   80, p);
+                    canvas.drawLine(cL + w4*3,    80, cR,          110, p);
+                    // Ritmo: 4 cuadrados
                     p.setStyle(Paint.Style.FILL);
                     for (int b = 0; b < 4; b++) {
-                        int bx = 42 + b * 72;
-                        canvas.drawRect(bx, 204, bx + 18, 222, p);
+                        int by = 220 + b * 36;
+                        canvas.drawRect(cL + 10, by, cR - 10, by + 22, p);
                     }
                     break;
                 default:
-                    for (int i = 0; i < 12; i++)
-                        canvas.drawCircle(45 + rnd.nextInt(PRINT_WIDTH - 90),
-                                          52 + rnd.nextInt(55), 6, p);
+                    // Puntos aleatorios
+                    p.setStyle(Paint.Style.FILL);
+                    for (int i = 0; i < 10; i++)
+                        canvas.drawCircle(cL + rnd.nextInt(cR - cL), 55 + rnd.nextInt(120), 6, p);
                     for (int i = 0; i < 6; i++)
-                        canvas.drawCircle(45 + rnd.nextInt(PRINT_WIDTH - 90),
-                                          150 + rnd.nextInt(60), 8, p);
+                        canvas.drawCircle(cL + rnd.nextInt(cR - cL), 210 + rnd.nextInt(140), 8, p);
                     break;
             }
         }
