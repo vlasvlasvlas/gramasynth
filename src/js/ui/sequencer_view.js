@@ -43,7 +43,7 @@ export class SequencerView {
       const clickX = (e.clientX - rect.left) * scaleX;
       const clickY = (e.clientY - rect.top) * scaleY;
 
-      const labelWidth = 100;
+      const labelWidth = Math.round(this.canvas.width * 0.105);
       if (clickX < labelWidth) return;
 
       const gridWidth = this.canvas.width - labelWidth;
@@ -68,6 +68,14 @@ export class SequencerView {
   }
 
   draw() {
+    // Sincronizar resolución interna del canvas con su tamaño real en pantalla
+    const dw = this.canvas.offsetWidth;
+    const dh = this.canvas.offsetHeight;
+    if (dw > 0 && dh > 0 && (this.canvas.width !== dw || this.canvas.height !== dh)) {
+      this.canvas.width = dw;
+      this.canvas.height = dh;
+    }
+
     const w = this.canvas.width;
     const h = this.canvas.height;
     const ctx = this.ctx;
@@ -78,10 +86,11 @@ export class SequencerView {
     ctx.fillStyle = '#0f1117';
     ctx.fillRect(0, 0, w, h);
 
-    const labelWidth = 100;
+    const labelWidth = Math.round(w * 0.105); // ~10.5% del ancho — escala con el canvas
     const gridWidth = w - labelWidth;
     const colWidth = gridWidth / 16;
     const rowHeight = h / 8;
+    const fontSize = Math.max(10, Math.min(14, Math.round(rowHeight * 0.32)));
 
     // Línea divisoria central en Y = 4 filas (Separación Melodía / Ritmo de 3 cm)
     ctx.fillStyle = '#161922';
@@ -99,8 +108,8 @@ export class SequencerView {
     for (let r = 0; r < 8; r++) {
       const y = r * rowHeight;
       ctx.fillStyle = (r < 4) ? '#6ee7b7' : '#f472b6';
-      ctx.font = 'bold 12px monospace';
-      ctx.fillText(this.rowLabels[r], 12, y + rowHeight * 0.62);
+      ctx.font = `bold ${fontSize}px monospace`;
+      ctx.fillText(this.rowLabels[r], 8, y + rowHeight * 0.62);
 
       // Línea horizontal de grilla
       ctx.strokeStyle = (r === 4) ? '#38bdf8' : '#232838';
