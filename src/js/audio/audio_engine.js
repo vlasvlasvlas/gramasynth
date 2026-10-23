@@ -91,11 +91,37 @@ export class AudioEngine {
 
     const stepDuration = this.getStepDuration();
 
-    // Disparamos las notas de cada fila para este paso
+    // Disparamos las notas de cada fila para este paso con soporte de ligaduras continuas
     for (let r = 0; r < 8; r++) {
       const cell = this.activePattern.cells[r][step];
       if (cell && cell.active) {
-        this.voices.trigger(r, time, cell.type, stepDuration);
+        if (r < 4 && cell.type === 'sustain') {
+          // ¿Viene continuando una línea horizontal del paso anterior?
+          const prevStep = (step - 1 + 16) % 16;
+          const prevCell = this.activePattern.cells[r][prevStep];
+          if (prevCell && prevCell.active && prevCell.type === 'sustain' && step !== 0) {
+            // Ya está sonando la nota sostenida en legato; no re-disparamos el ataque
+            continue;
+          }
+
+          // Calcular la longitud total de la línea continua
+          let span = 1;
+          for (let next = 1; next < 16; next++) {
+            const s = (step + next) % 16;
+            const nextCell = this.activePattern.cells[r][s];
+            if (nextCell && nextCell.active && nextCell.type === 'sustain') {
+              span++;
+            } else {
+              break;
+            }
+          }
+
+          // Duración continua de la línea horizontal
+          const continuousDuration = span * stepDuration;
+          this.voices.trigger(r, time, cell.type, continuousDuration);
+        } else {
+          this.voices.trigger(r, time, cell.type, stepDuration);
+        }
       }
     }
 

@@ -74,16 +74,21 @@ export class VoicePool {
       filter.Q.setValueAtTime(2.0, time);
     }
 
-    // Duración de la envolvente
+    // Duración de la envolvente según gesto
     let duration = 0.12;
     if (cellType === 'sustain') {
-      duration = stepDuration * 1.25; // Se solapa suavemente con el siguiente paso
+      duration = Math.max(0.18, stepDuration * 0.96); // Se sostiene durante toda la línea continua
     }
 
     // Envolvente ADSR suave sin clicks
-    const peakGain = (cellType === 'accent') ? 0.35 : 0.22;
+    const peakGain = (cellType === 'accent') ? 0.36 : 0.24;
     gain.gain.setValueAtTime(0.0001, time);
-    gain.gain.linearRampToValueAtTime(peakGain, time + 0.012);
+    gain.gain.linearRampToValueAtTime(peakGain, time + 0.015);
+
+    // Si es una línea continua larga, mantener el nivel de sustain estable antes del release
+    if (cellType === 'sustain' && duration > 0.2) {
+      gain.gain.setValueAtTime(peakGain * 0.88, time + duration - 0.06);
+    }
     gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
 
     osc.connect(filter);
@@ -91,7 +96,7 @@ export class VoicePool {
     gain.connect(this.masterGain);
 
     osc.start(time);
-    osc.stop(time + duration + 0.05);
+    osc.stop(time + duration + 0.06);
   }
 
   // ==================== VOCES PERCUSIVAS (4..7) ====================

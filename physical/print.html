@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>ROLLITO — Plantilla Imprimible A4 (Escala 1:1)</title>
+  <title>ROLLITO — Partituras Gráficas Lúdicas (Escala 1:1)</title>
   <style>
     @page {
       size: A4 portrait;
@@ -15,8 +15,8 @@
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
-      background: #e5e7eb;
-      color: #111;
+      background: #e2e8f0;
+      color: #0f172a;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -24,29 +24,47 @@
     }
     .no-print {
       background: #fff;
-      padding: 16px 24px;
-      border-radius: 8px;
+      padding: 18px 26px;
+      border-radius: 10px;
       margin-bottom: 24px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      max-width: 820px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+      max-width: 840px;
       width: 100%;
       text-align: center;
     }
     .no-print h1 {
-      font-size: 1.4rem;
+      font-size: 1.45rem;
       margin-bottom: 8px;
       color: #0f172a;
     }
     .no-print p {
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       color: #475569;
       margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    .legend-bar {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 8px 16px;
+      border-radius: 6px;
+      margin-bottom: 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
     .btn {
       background: #0284c7;
       color: #fff;
       border: none;
-      padding: 10px 22px;
+      padding: 10px 24px;
       font-size: 0.95rem;
       font-weight: bold;
       border-radius: 6px;
@@ -55,24 +73,25 @@
     .btn:hover {
       background: #0369a1;
     }
+
     .page {
       width: 194mm;
       min-height: 280mm;
       background: #fff;
       padding: 8mm 6mm;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
       margin-bottom: 24px;
       position: relative;
     }
     .page-header {
-      font-size: 9px;
+      font-size: 8.5px;
       font-weight: bold;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       color: #64748b;
       border-bottom: 1px solid #cbd5e1;
       padding-bottom: 4px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       display: flex;
       justify-content: space-between;
     }
@@ -104,104 +123,32 @@
       height: 60mm;
       border-right: 1px dashed #94a3b8;
       position: relative;
-      padding: 2mm 3mm;
       display: flex;
       flex-direction: column;
+      background: #ffffff;
     }
     .block:last-child {
       border-right: none;
     }
-    /* Marcadores ópticos de registro en 4 esquinas */
+
+    /* 4 Marcadores ópticos en las esquinas */
     .marker {
       width: 4.5mm;
       height: 4.5mm;
       background: #000;
       position: absolute;
-      z-index: 10;
+      z-index: 20;
     }
     .m-tl { top: 1mm; left: 1mm; }
     .m-tr { top: 1mm; right: 1mm; }
     .m-bl { bottom: 1mm; left: 1mm; }
     .m-br { bottom: 1mm; right: 1mm; }
 
-    .block-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 5mm;
-      margin-bottom: 1mm;
-      font-size: 7px;
-      font-weight: bold;
-    }
-    .block-title {
-      color: #0f172a;
-    }
-    .band-label {
-      font-size: 6px;
-      font-weight: bold;
-      color: #64748b;
-      position: absolute;
-      left: 6mm;
-      z-index: 5;
-    }
-    .band-top-label { top: 3.5mm; }
-    .band-bot-label { top: 32mm; }
-
-    /* Contenedor de la grilla de cada banda (4 filas x 16 columnas) */
-    .band {
-      height: 27mm;
+    /* SVG gráfico de cada bloque */
+    .block-svg {
       width: 100%;
-      position: relative;
-      display: grid;
-      grid-template-columns: repeat(16, 1fr);
-      grid-template-rows: repeat(4, 1fr);
-      padding: 3mm 5mm 1mm 5mm;
-    }
-    .band-melodic {
-      border-bottom: 1.2px dashed #000;
-    }
-    .band-rhythm {
-      padding-top: 3.5mm;
-    }
-
-    /* Celda unitaria */
-    .cell {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    /* Punto guía tenue para celdas vacías */
-    .guide-dot {
-      width: 1.2px;
-      height: 1.2px;
-      background: #94a3b8;
-      border-radius: 50%;
-    }
-    /* Tipos de trazos preimpresos (Alto contraste negro para la webcam) */
-    .note-trigger {
-      width: 3.2mm;
-      height: 3.2mm;
-      background: #000;
-      border-radius: 50%;
-    }
-    .note-rich {
-      width: 3.4mm;
-      height: 3.4mm;
-      background: #000;
-      border-radius: 0.4mm;
-    }
-    .note-sustain {
-      width: 100%;
-      height: 2.6mm;
-      background: #000;
-      border-radius: 0.8mm;
-    }
-    .note-accent {
-      width: 1.8mm;
-      height: 4.8mm;
-      background: #000;
-      border-radius: 0.4mm;
+      height: 100%;
+      display: block;
     }
 
     @media print {
@@ -223,252 +170,369 @@
 <body>
 
   <div class="no-print">
-    <h1>ROLLITO — Plantillas Imprimibles (Escala 1:1)</h1>
-    <p>Ajustes de impresión: <strong>A4</strong>, escala <strong>100%</strong> (sin márgenes automáticos).<br/>
-    Los bloques 1 a 5 traen los patrones pregrabados de fábrica. Los bloques 6 a 10 son para dibujar libremente.</p>
-    <button class="btn" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
+    <h1>ROLLITO — Partituras Gráficas Lúdicas (Escala 1:1)</h1>
+    <p>
+      El trazo dibuja la música: <strong>las líneas continuas</strong> sostienen notas largas, <strong>las curvas</strong> crean arpegios y toboganes, y <strong>los puntos</strong> disparan percusión.
+    </p>
+    <div class="legend-bar">
+      <div class="legend-item"><span>━</span> Línea: Nota Larga (Sustain)</div>
+      <div class="legend-item"><span>〰️</span> Curva: Melodía / Arpegio</div>
+      <div class="legend-item"><span>●</span> Punto: Percusión / Staccato</div>
+      <div class="legend-item"><span>■</span> Mancha: Bombo Pesado / Ruido</div>
+    </div>
+    <button class="btn" onclick="window.print()">🖨️ Imprimir / Guardar como PDF (A4 - Escala 100%)</button>
   </div>
 
-  <!-- PÁGINA 1: BLOQUES 1 A 4 -->
+  <!-- PÁGINA 1: TEMPLATES 01 A 04 -->
   <div class="page">
     <div class="page-header">
       <span>POSNETES — GRAMASYNTH ROLLITO (TIRA DE 60 MM)</span>
-      <span>HOJA 1 DE 3 — BLOQUES 01 A 04 (TEMPLATES)</span>
+      <span>HOJA 1 DE 3 — TEMPLATES GRÁFICOS 01 A 04</span>
     </div>
     <div class="strip-container">
-      
-      <!-- Tira 1: Bloques 1 y 2 -->
+
+      <!-- Tira 1: Bloque 1 y 2 -->
       <div class="strip-wrapper">
         <div class="strip-cut-hint">✂️ CORTAR POR LA LÍNEA EXTERIOR (ALTO 60 MM)</div>
         <div class="strip">
-          <div class="block" id="block-1"></div>
-          <div class="block" id="block-2"></div>
+          
+          <!-- BLOQUE 1: EL PULSO Y EL HORIZONTE -->
+          <div class="block">
+            <div class="marker m-tl"></div><div class="marker m-tr"></div>
+            <div class="marker m-bl"></div><div class="marker m-br"></div>
+            <svg viewBox="0 0 91 60" class="block-svg">
+              <!-- Encabezado -->
+              <text x="7" y="5" font-size="2.6" font-weight="bold" fill="#0f172a">B1: EL HORIZONTE & EL PULSO</text>
+              <text x="7" y="8" font-size="1.9" fill="#64748b">Línea continua = sonido largo sostenido</text>
+
+              <!-- Carriles guía tenues -->
+              <line x1="6" y1="12" x2="85" y2="12" stroke="#e2e8f0" stroke-width="0.3"/>
+              <line x1="6" y1="17" x2="85" y2="17" stroke="#e2e8f0" stroke-width="0.3"/>
+              <line x1="6" y1="22" x2="85" y2="22" stroke="#e2e8f0" stroke-width="0.3"/>
+              <line x1="6" y1="27" x2="85" y2="27" stroke="#e2e8f0" stroke-width="0.3"/>
+
+              <!-- Línea central Melodía / Ritmo (Y = 30mm) -->
+              <line x1="6" y1="30" x2="85" y2="30" stroke="#000" stroke-width="0.5" stroke-dasharray="1,1"/>
+              <text x="7" y="33" font-size="1.8" font-weight="bold" fill="#64748b">▼ RITMO (30mm)</text>
+
+              <!-- TRAZO LÚDICO SUPERIOR: Una sola línea horizontal continua gruesa (Sustain Pad) -->
+              <rect x="8" y="20.5" width="74" height="2.8" rx="1.2" fill="#000"/>
+              <text x="8" y="19" font-size="1.8" font-weight="bold" fill="#000">━ LÍNEA CONTINUA (SUSTAIN PAD EN SOL)</text>
+
+              <!-- Gotas melódicas agudas de adorno -->
+              <circle cx="28" cy="12" r="1.6" fill="#000"/>
+              <circle cx="68" cy="12" r="1.6" fill="#000"/>
+
+              <!-- TRAZO LÚDICO INFERIOR: 4 Bombos contundentes (bloques) + Charles continuos -->
+              <!-- Bombos en tiempos 1, 2, 3, 4 -->
+              <rect x="8" y="52" width="5.5" height="4.5" rx="0.8" fill="#000"/>
+              <rect x="28" y="52" width="5.5" height="4.5" rx="0.8" fill="#000"/>
+              <rect x="48" y="52" width="5.5" height="4.5" rx="0.8" fill="#000"/>
+              <rect x="68" y="52" width="5.5" height="4.5" rx="0.8" fill="#000"/>
+
+              <!-- Cajas en 2 y 4 -->
+              <circle cx="28" cy="45" r="2.2" fill="#000"/>
+              <circle cx="68" cy="45" r="2.2" fill="#000"/>
+
+              <!-- Platillos sutiles punteados -->
+              <circle cx="18" cy="38" r="1.2" fill="#000"/>
+              <circle cx="38" cy="38" r="1.2" fill="#000"/>
+              <circle cx="58" cy="38" r="1.2" fill="#000"/>
+              <circle cx="78" cy="38" r="1.2" fill="#000"/>
+            </svg>
+          </div>
+
+          <!-- BLOQUE 2: LA MONTAÑA RUSA (ARPEGIO) -->
+          <div class="block">
+            <div class="marker m-tl"></div><div class="marker m-tr"></div>
+            <div class="marker m-bl"></div><div class="marker m-br"></div>
+            <svg viewBox="0 0 91 60" class="block-svg">
+              <text x="7" y="5" font-size="2.6" font-weight="bold" fill="#0f172a">B2: LA MONTAÑA RUSA (ARPEGIO)</text>
+              <text x="7" y="8" font-size="1.9" fill="#64748b">La onda que sube y baja crea la melodía</text>
+
+              <line x1="6" y1="30" x2="85" y2="30" stroke="#000" stroke-width="0.5" stroke-dasharray="1,1"/>
+              <text x="7" y="33" font-size="1.8" font-weight="bold" fill="#64748b">▼ RITMO SINCOPADO</text>
+
+              <!-- TRAZO LÚDICO: Una ola/montaña rusa que sube y baja fluidamente -->
+              <path d="M 8 26 Q 18 10, 28 26 T 48 26 T 68 26 T 82 12" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+              
+              <!-- Nodos destacados en las cumbres y valles -->
+              <circle cx="18" cy="14" r="2.2" fill="#000"/>
+              <circle cx="38" cy="14" r="2.2" fill="#000"/>
+              <circle cx="58" cy="14" r="2.2" fill="#000"/>
+              <circle cx="82" cy="12" r="2.4" fill="#000"/>
+
+              <!-- Ritmo quebrado / sincopado abajo -->
+              <rect x="8" y="52" width="5" height="4.2" rx="0.8" fill="#000"/>
+              <rect x="23" y="52" width="5" height="4.2" rx="0.8" fill="#000"/>
+              <rect x="48" y="52" width="5" height="4.2" rx="0.8" fill="#000"/>
+              <rect x="63" y="52" width="5" height="4.2" rx="0.8" fill="#000"/>
+
+              <circle cx="38" cy="45" r="2.2" fill="#000"/>
+              <circle cx="78" cy="45" r="2.2" fill="#000"/>
+            </svg>
+          </div>
+
         </div>
       </div>
 
-      <!-- Tira 2: Bloques 3 y 4 -->
+      <!-- Tira 2: Bloque 3 y 4 -->
       <div class="strip-wrapper">
         <div class="strip-cut-hint">✂️ CORTAR POR LA LÍNEA EXTERIOR (ALTO 60 MM)</div>
         <div class="strip">
-          <div class="block" id="block-3"></div>
-          <div class="block" id="block-4"></div>
+
+          <!-- BLOQUE 3: LA LLUVIA DE GOTAS (STACCATO) -->
+          <div class="block">
+            <div class="marker m-tl"></div><div class="marker m-tr"></div>
+            <div class="marker m-bl"></div><div class="marker m-br"></div>
+            <svg viewBox="0 0 91 60" class="block-svg">
+              <text x="7" y="5" font-size="2.6" font-weight="bold" fill="#0f172a">B3: LA LLUVIA DE GOTAS</text>
+              <text x="7" y="8" font-size="1.9" fill="#64748b">Puntos salpicados = ráfagas de notas cortas (staccato)</text>
+
+              <line x1="6" y1="30" x2="85" y2="30" stroke="#000" stroke-width="0.5" stroke-dasharray="1,1"/>
+
+              <!-- Nube de gotas melódicas a distintas alturas -->
+              <circle cx="10" cy="13" r="1.8" fill="#000"/>
+              <circle cx="16" cy="24" r="1.8" fill="#000"/>
+              <circle cx="22" cy="18" r="1.8" fill="#000"/>
+              <circle cx="30" cy="11" r="2.0" fill="#000"/>
+              <circle cx="36" cy="22" r="1.8" fill="#000"/>
+              <circle cx="44" cy="15" r="1.8" fill="#000"/>
+              <circle cx="52" cy="25" r="1.8" fill="#000"/>
+              <circle cx="60" cy="12" r="2.0" fill="#000"/>
+              <circle cx="68" cy="19" r="1.8" fill="#000"/>
+              <circle cx="76" cy="14" r="1.8" fill="#000"/>
+              <circle cx="82" cy="23" r="1.8" fill="#000"/>
+
+              <!-- Gotas rítmicas dispersas abajo -->
+              <circle cx="10" cy="54" r="2.5" fill="#000"/>
+              <circle cx="28" cy="38" r="1.6" fill="#000"/>
+              <circle cx="34" cy="46" r="2.0" fill="#000"/>
+              <circle cx="50" cy="54" r="2.5" fill="#000"/>
+              <circle cx="66" cy="38" r="1.6" fill="#000"/>
+              <circle cx="72" cy="46" r="2.0" fill="#000"/>
+            </svg>
+          </div>
+
+          <!-- BLOQUE 4: EL TOBOGÁN ACID (GLISSANDO & ACENTOS) -->
+          <div class="block">
+            <div class="marker m-tl"></div><div class="marker m-tr"></div>
+            <div class="marker m-bl"></div><div class="marker m-br"></div>
+            <svg viewBox="0 0 91 60" class="block-svg">
+              <text x="7" y="5" font-size="2.6" font-weight="bold" fill="#0f172a">B4: EL TOBOGÁN ACID & ACENTOS</text>
+              <text x="7" y="8" font-size="1.9" fill="#64748b">Rampas = glissando / Barras verticales = acento de filtro</text>
+
+              <line x1="6" y1="30" x2="85" y2="30" stroke="#000" stroke-width="0.5" stroke-dasharray="1,1"/>
+
+              <!-- Rampa descendente (Tobogán) -->
+              <line x1="10" y1="12" x2="32" y2="26" stroke="#000" stroke-width="2.8" stroke-linecap="round"/>
+              <!-- Barras verticales de acento (abren filtro resonante) -->
+              <rect x="38" y="11" width="2.4" height="15" rx="0.6" fill="#000"/>
+              <!-- Rampa ascendente -->
+              <line x1="46" y1="26" x2="68" y2="12" stroke="#000" stroke-width="2.8" stroke-linecap="round"/>
+              <!-- Barra vertical doble -->
+              <rect x="74" y="11" width="2.4" height="15" rx="0.6" fill="#000"/>
+
+              <!-- Base contundente abajo -->
+              <rect x="10" y="52" width="6" height="4.5" rx="0.8" fill="#000"/>
+              <rect x="30" y="52" width="6" height="4.5" rx="0.8" fill="#000"/>
+              <rect x="50" y="52" width="6" height="4.5" rx="0.8" fill="#000"/>
+              <rect x="70" y="52" width="6" height="4.5" rx="0.8" fill="#000"/>
+
+              <!-- Contratiempos rápidos -->
+              <circle cx="20" cy="38" r="1.5" fill="#000"/>
+              <circle cx="40" cy="38" r="1.5" fill="#000"/>
+              <circle cx="60" cy="38" r="1.5" fill="#000"/>
+              <circle cx="80" cy="38" r="1.5" fill="#000"/>
+            </svg>
+          </div>
+
         </div>
       </div>
 
     </div>
   </div>
 
-  <!-- PÁGINA 2: BLOQUES 5 A 8 -->
+  <!-- PÁGINA 2: TEMPLATE 05 Y CAJONES LIBRES 06 A 08 -->
   <div class="page">
     <div class="page-header">
       <span>POSNETES — GRAMASYNTH ROLLITO (TIRA DE 60 MM)</span>
-      <span>HOJA 2 DE 3 — BLOQUES 05 A 08</span>
+      <span>HOJA 2 DE 3 — TEMPLATE 05 Y LIENZOS LIBRES</span>
     </div>
     <div class="strip-container">
-      
-      <!-- Tira 3: Bloque 5 (Template) y Bloque 6 (Libre) -->
+
+      <!-- Tira 3: Bloque 5 (Tormenta) y Bloque 6 (Lienzo Libre 1) -->
       <div class="strip-wrapper">
         <div class="strip-cut-hint">✂️ CORTAR POR LA LÍNEA EXTERIOR (ALTO 60 MM)</div>
         <div class="strip">
-          <div class="block" id="block-5"></div>
-          <div class="block" id="block-6"></div>
+
+          <!-- BLOQUE 5: LA TORMENTA (TEXTURA / MANCHAS) -->
+          <div class="block">
+            <div class="marker m-tl"></div><div class="marker m-tr"></div>
+            <div class="marker m-bl"></div><div class="marker m-br"></div>
+            <svg viewBox="0 0 91 60" class="block-svg">
+              <text x="7" y="5" font-size="2.6" font-weight="bold" fill="#0f172a">B5: LA TORMENTA (MANCHAS & NOISE)</text>
+              <text x="7" y="8" font-size="1.9" fill="#64748b">Trazos densos y manchas = saturación y potencia</text>
+
+              <line x1="6" y1="30" x2="85" y2="30" stroke="#000" stroke-width="0.5" stroke-dasharray="1,1"/>
+
+              <!-- Bloques densos y líneas de contrapunto -->
+              <rect x="8" y="14" width="22" height="4.5" rx="1" fill="#000"/>
+              <rect x="36" y="21" width="22" height="4.5" rx="1" fill="#000"/>
+              <rect x="64" y="11" width="18" height="6.5" rx="1" fill="#000"/>
+
+              <!-- Redoble denso de percusión abajo -->
+              <rect x="8" y="51" width="8" height="5.5" rx="1" fill="#000"/>
+              <rect x="22" y="51" width="8" height="5.5" rx="1" fill="#000"/>
+              <rect x="36" y="51" width="8" height="5.5" rx="1" fill="#000"/>
+              <rect x="50" y="51" width="8" height="5.5" rx="1" fill="#000"/>
+              <rect x="64" y="51" width="18" height="5.5" rx="1" fill="#000"/>
+            </svg>
+          </div>
+
+          <!-- BLOQUE 6: LIENZO LIBRE 01 -->
+          <div class="block">
+            <div class="marker m-tl"></div><div class="marker m-tr"></div>
+            <div class="marker m-bl"></div><div class="marker m-br"></div>
+            <svg viewBox="0 0 91 60" class="block-svg">
+              <text x="7" y="5" font-size="2.6" font-weight="bold" fill="#0f172a">B6: TU DIBUJO LIBRE 01 ✍️</text>
+              <text x="7" y="8" font-size="1.8" fill="#64748b">▲ Dibuja líneas continuas o curvas para cantar</text>
+
+              <!-- Pentagrama gráfico suave para orientar la altura tonal -->
+              <g stroke="#cbd5e1" stroke-width="0.3">
+                <line x1="6" y1="12" x2="85" y2="12"/>
+                <line x1="6" y1="17" x2="85" y2="17"/>
+                <line x1="6" y1="22" x2="85" y2="22"/>
+                <line x1="6" y1="27" x2="85" y2="27"/>
+              </g>
+              <text x="7" y="11.5" font-size="1.6" fill="#94a3b8">Do5 (Agudo)</text>
+              <text x="7" y="26.5" font-size="1.6" fill="#94a3b8">Do4 (Grave)</text>
+
+              <!-- División central -->
+              <line x1="6" y1="30" x2="85" y2="30" stroke="#000" stroke-width="0.5" stroke-dasharray="1.5,1.5"/>
+              <text x="7" y="33" font-size="1.8" fill="#64748b">▼ Dibuja puntos, rayas o manchas para ritmos</text>
+
+              <g stroke="#cbd5e1" stroke-width="0.3">
+                <line x1="6" y1="38" x2="85" y2="38"/>
+                <line x1="6" y1="45" x2="85" y2="45"/>
+                <line x1="6" y1="53" x2="85" y2="53"/>
+              </g>
+              <text x="7" y="37.5" font-size="1.6" fill="#94a3b8">Platillos / HiHat</text>
+              <text x="7" y="44.5" font-size="1.6" fill="#94a3b8">Caja / Redoblante</text>
+              <text x="7" y="52.5" font-size="1.6" fill="#94a3b8">Bombo / Kick</text>
+
+              <!-- Marcas sutiles de compás (4 tiempos) -->
+              <g stroke="#e2e8f0" stroke-width="0.4" stroke-dasharray="0.8,1.2">
+                <line x1="26" y1="8" x2="26" y2="58"/>
+                <line x1="46" y1="8" x2="46" y2="58"/>
+                <line x1="66" y1="8" x2="66" y2="58"/>
+              </g>
+            </svg>
+          </div>
+
         </div>
       </div>
 
-      <!-- Tira 4: Bloques 7 y 8 (Libres) -->
+      <!-- Tira 4: Bloque 7 y 8 (Libres) -->
       <div class="strip-wrapper">
         <div class="strip-cut-hint">✂️ CORTAR POR LA LÍNEA EXTERIOR (ALTO 60 MM)</div>
         <div class="strip">
-          <div class="block" id="block-7"></div>
-          <div class="block" id="block-8"></div>
+
+          <!-- BLOQUE 7: LIENZO LIBRE 02 -->
+          <div class="block">
+            <div class="marker m-tl"></div><div class="marker m-tr"></div>
+            <div class="marker m-bl"></div><div class="marker m-br"></div>
+            <svg viewBox="0 0 91 60" class="block-svg">
+              <text x="7" y="5" font-size="2.6" font-weight="bold" fill="#0f172a">B7: TU DIBUJO LIBRE 02 ✍️</text>
+              <line x1="6" y1="30" x2="85" y2="30" stroke="#000" stroke-width="0.5" stroke-dasharray="1.5,1.5"/>
+              <g stroke="#cbd5e1" stroke-width="0.3">
+                <line x1="6" y1="12" x2="85" y2="12"/><line x1="6" y1="17" x2="85" y2="17"/>
+                <line x1="6" y1="22" x2="85" y2="22"/><line x1="6" y1="27" x2="85" y2="27"/>
+                <line x1="6" y1="38" x2="85" y2="38"/><line x1="6" y1="45" x2="85" y2="45"/><line x1="6" y1="53" x2="85" y2="53"/>
+              </g>
+              <g stroke="#e2e8f0" stroke-width="0.4" stroke-dasharray="0.8,1.2">
+                <line x1="26" y1="8" x2="26" y2="58"/><line x1="46" y1="8" x2="46" y2="58"/><line x1="66" y1="8" x2="66" y2="58"/>
+              </g>
+            </svg>
+          </div>
+
+          <!-- BLOQUE 8: LIENZO LIBRE 03 -->
+          <div class="block">
+            <div class="marker m-tl"></div><div class="marker m-tr"></div>
+            <div class="marker m-bl"></div><div class="marker m-br"></div>
+            <svg viewBox="0 0 91 60" class="block-svg">
+              <text x="7" y="5" font-size="2.6" font-weight="bold" fill="#0f172a">B8: TU DIBUJO LIBRE 03 ✍️</text>
+              <line x1="6" y1="30" x2="85" y2="30" stroke="#000" stroke-width="0.5" stroke-dasharray="1.5,1.5"/>
+              <g stroke="#cbd5e1" stroke-width="0.3">
+                <line x1="6" y1="12" x2="85" y2="12"/><line x1="6" y1="17" x2="85" y2="17"/>
+                <line x1="6" y1="22" x2="85" y2="22"/><line x1="6" y1="27" x2="85" y2="27"/>
+                <line x1="6" y1="38" x2="85" y2="38"/><line x1="6" y1="45" x2="85" y2="45"/><line x1="6" y1="53" x2="85" y2="53"/>
+              </g>
+              <g stroke="#e2e8f0" stroke-width="0.4" stroke-dasharray="0.8,1.2">
+                <line x1="26" y1="8" x2="26" y2="58"/><line x1="46" y1="8" x2="46" y2="58"/><line x1="66" y1="8" x2="66" y2="58"/>
+              </g>
+            </svg>
+          </div>
+
         </div>
       </div>
 
     </div>
   </div>
 
-  <!-- PÁGINA 3: BLOQUES 9 Y 10 -->
+  <!-- PÁGINA 3: CAJONES LIBRES 09 Y 10 -->
   <div class="page">
     <div class="page-header">
       <span>POSNETES — GRAMASYNTH ROLLITO (TIRA DE 60 MM)</span>
-      <span>HOJA 3 DE 3 — BLOQUES 09 Y 10 (LIBRES)</span>
+      <span>HOJA 3 DE 3 — LIENZOS LIBRES 09 Y 10</span>
     </div>
     <div class="strip-container">
-      
-      <!-- Tira 5: Bloques 9 y 10 (Libres) -->
+
       <div class="strip-wrapper">
         <div class="strip-cut-hint">✂️ CORTAR POR LA LÍNEA EXTERIOR (ALTO 60 MM)</div>
         <div class="strip">
-          <div class="block" id="block-9"></div>
-          <div class="block" id="block-10"></div>
+
+          <!-- BLOQUE 9: LIENZO LIBRE 04 -->
+          <div class="block">
+            <div class="marker m-tl"></div><div class="marker m-tr"></div>
+            <div class="marker m-bl"></div><div class="marker m-br"></div>
+            <svg viewBox="0 0 91 60" class="block-svg">
+              <text x="7" y="5" font-size="2.6" font-weight="bold" fill="#0f172a">B9: TU DIBUJO LIBRE 04 ✍️</text>
+              <line x1="6" y1="30" x2="85" y2="30" stroke="#000" stroke-width="0.5" stroke-dasharray="1.5,1.5"/>
+              <g stroke="#cbd5e1" stroke-width="0.3">
+                <line x1="6" y1="12" x2="85" y2="12"/><line x1="6" y1="17" x2="85" y2="17"/>
+                <line x1="6" y1="22" x2="85" y2="22"/><line x1="6" y1="27" x2="85" y2="27"/>
+                <line x1="6" y1="38" x2="85" y2="38"/><line x1="6" y1="45" x2="85" y2="45"/><line x1="6" y1="53" x2="85" y2="53"/>
+              </g>
+              <g stroke="#e2e8f0" stroke-width="0.4" stroke-dasharray="0.8,1.2">
+                <line x1="26" y1="8" x2="26" y2="58"/><line x1="46" y1="8" x2="46" y2="58"/><line x1="66" y1="8" x2="66" y2="58"/>
+              </g>
+            </svg>
+          </div>
+
+          <!-- BLOQUE 10: LIENZO LIBRE 05 -->
+          <div class="block">
+            <div class="marker m-tl"></div><div class="marker m-tr"></div>
+            <div class="marker m-bl"></div><div class="marker m-br"></div>
+            <svg viewBox="0 0 91 60" class="block-svg">
+              <text x="7" y="5" font-size="2.6" font-weight="bold" fill="#0f172a">B10: TU DIBUJO LIBRE 05 ✍️</text>
+              <line x1="6" y1="30" x2="85" y2="30" stroke="#000" stroke-width="0.5" stroke-dasharray="1.5,1.5"/>
+              <g stroke="#cbd5e1" stroke-width="0.3">
+                <line x1="6" y1="12" x2="85" y2="12"/><line x1="6" y1="17" x2="85" y2="17"/>
+                <line x1="6" y1="22" x2="85" y2="22"/><line x1="6" y1="27" x2="85" y2="27"/>
+                <line x1="6" y1="38" x2="85" y2="38"/><line x1="6" y1="45" x2="85" y2="45"/><line x1="6" y1="53" x2="85" y2="53"/>
+              </g>
+              <g stroke="#e2e8f0" stroke-width="0.4" stroke-dasharray="0.8,1.2">
+                <line x1="26" y1="8" x2="26" y2="58"/><line x1="46" y1="8" x2="46" y2="58"/><line x1="66" y1="8" x2="66" y2="58"/>
+              </g>
+            </svg>
+          </div>
+
         </div>
       </div>
 
     </div>
   </div>
 
-  <script>
-    // Definición exacta de patrones de los 10 bloques
-    const BLOCKS_DATA = {
-      1: {
-        title: "B1: 4-ON-THE-FLOOR & BASS",
-        melodic: [
-          [], // Fila 0 (C5)
-          [2, 10], // Fila 1 (A4) - trigger
-          [], // Fila 2 (G4)
-          // Fila 3 (C4 Bass) - sustain en 0,1, 4,5, 8,9, 12,13
-          [{c:0, type:'sustain'}, {c:1, type:'sustain'}, {c:4, type:'sustain'}, {c:5, type:'sustain'}, {c:8, type:'sustain'}, {c:9, type:'sustain'}, {c:12, type:'sustain'}, {c:13, type:'sustain'}]
-        ],
-        rhythm: [
-          [], // Fila 4 (Perc/OpenHat)
-          [2, 6, 10, 14], // Fila 5 (Closed Hat)
-          [4, 12], // Fila 6 (Snare)
-          [{c:0, type:'rich'}, {c:4, type:'rich'}, {c:8, type:'rich'}, {c:12, type:'rich'}] // Fila 7 (Kick)
-        ]
-      },
-      2: {
-        title: "B2: SÍNCOPA & ARPEGIO",
-        melodic: [
-          [{c:6, type:'accent'}], // Fila 0
-          [4, 8], // Fila 1
-          [2, 10, 14], // Fila 2
-          [0, 12] // Fila 3
-        ],
-        rhythm: [
-          [],
-          [2, 6, 10, 14],
-          [4, 12],
-          [{c:0, type:'rich'}, {c:3, type:'rich'}, {c:8, type:'rich'}, {c:11, type:'rich'}]
-        ]
-      },
-      3: {
-        title: "B3: AMBIENT PADS (SUSTAIN)",
-        melodic: [
-          [],
-          // Pad largo fila 1 pasos 0..7
-          [0,1,2,3,4,5,6,7].map(c => ({c, type:'sustain'})),
-          // Pad largo fila 2 pasos 8..15
-          [8,9,10,11,12,13,14,15].map(c => ({c, type:'sustain'})),
-          []
-        ],
-        rhythm: [
-          [4, 12],
-          [],
-          [],
-          [0, 8]
-        ]
-      },
-      4: {
-        title: "B4: ELECTRO ACID (ACENTOS)",
-        melodic: [
-          [{c:14, type:'accent'}],
-          [{c:10, type:'accent'}],
-          [{c:6, type:'accent'}, {c:12, type:'trigger'}],
-          [{c:0, type:'trigger'}, {c:2, type:'accent'}, {c:4, type:'trigger'}, {c:8, type:'trigger'}]
-        ],
-        rhythm: [
-          [],
-          [2, 6, 10, 14],
-          [],
-          [{c:0, type:'rich'}, {c:4, type:'rich'}, {c:8, type:'rich'}, {c:12, type:'rich'}]
-        ]
-      },
-      5: {
-        title: "B5: POLIRRITMO 3 CONTRA 4",
-        melodic: [
-          [4, 10],
-          [],
-          [{c:0, type:'sustain'}, {c:1, type:'sustain'}, {c:6, type:'sustain'}, {c:7, type:'sustain'}, {c:12, type:'sustain'}, {c:13, type:'sustain'}],
-          []
-        ],
-        rhythm: [
-          [],
-          [],
-          [0, 3, 6, 9, 12, 15], // Tresillos
-          [{c:0, type:'rich'}, {c:4, type:'rich'}, {c:8, type:'rich'}, {c:12, type:'rich'}]
-        ]
-      },
-      // Bloques Libres 6 a 10
-      6: { title: "B6: ESPACIO LIBRE 01 ✍️", isFree: true },
-      7: { title: "B7: ESPACIO LIBRE 02 ✍️", isFree: true },
-      8: { title: "B8: ESPACIO LIBRE 03 ✍️", isFree: true },
-      9: { title: "B9: ESPACIO LIBRE 04 ✍️", isFree: true },
-      10: { title: "B10: ESPACIO LIBRE 05 ✍️", isFree: true }
-    };
-
-    function renderBlock(blockId) {
-      const container = document.getElementById(`block-${blockId}`);
-      if (!container) return;
-
-      const data = BLOCKS_DATA[blockId];
-
-      let html = `
-        <div class="marker m-tl"></div><div class="marker m-tr"></div>
-        <div class="marker m-bl"></div><div class="marker m-br"></div>
-        
-        <div class="block-header">
-          <span class="block-title">${data.title}</span>
-        </div>
-
-        <span class="band-label band-top-label">▲ MELODÍA (30mm)</span>
-        <div class="band band-melodic">
-      `;
-
-      // Renderizar 4 filas x 16 cols Melódica
-      for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 16; c++) {
-          html += renderCell(data.melodic ? data.melodic[r] : [], c, data.isFree);
-        }
-      }
-
-      html += `
-        </div>
-        <span class="band-label band-bot-label">▼ RITMO (30mm)</span>
-        <div class="band band-rhythm">
-      `;
-
-      // Renderizar 4 filas x 16 cols Rítmica
-      for (let r = 0; r < 4; r++) {
-        for (let c = 0; c < 16; c++) {
-          html += renderCell(data.rhythm ? data.rhythm[r] : [], c, data.isFree);
-        }
-      }
-
-      html += `</div>`;
-      container.innerHTML = html;
-    }
-
-    function renderCell(rowNotes, col, isFree) {
-      if (isFree || !rowNotes) {
-        return `<div class="cell"><div class="guide-dot"></div></div>`;
-      }
-
-      // Buscar si esta columna tiene nota
-      let note = null;
-      for (const item of rowNotes) {
-        if (typeof item === 'number' && item === col) {
-          note = { type: 'trigger' };
-          break;
-        } else if (item && typeof item === 'object' && item.c === col) {
-          note = item;
-          break;
-        }
-      }
-
-      if (note) {
-        const cls = note.type === 'sustain' ? 'note-sustain' :
-                    note.type === 'accent' ? 'note-accent' :
-                    note.type === 'rich' ? 'note-rich' : 'note-trigger';
-        return `<div class="cell"><div class="${cls}"></div></div>`;
-      } else {
-        return `<div class="cell"><div class="guide-dot"></div></div>`;
-      }
-    }
-
-    // Inicializar renderizado de todos los bloques
-    for (let i = 1; i <= 10; i++) {
-      renderBlock(i);
-    }
-  </script>
 </body>
 </html>
