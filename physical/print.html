@@ -6,7 +6,7 @@
   <style>
     @page {
       size: A4 portrait;
-      margin: 10mm;
+      margin: 8mm;
     }
     * {
       box-sizing: border-box;
@@ -15,7 +15,7 @@
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
-      background: #f0f0f0;
+      background: #e5e7eb;
       color: #111;
       display: flex;
       flex-direction: column;
@@ -28,150 +28,180 @@
       border-radius: 8px;
       margin-bottom: 24px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      max-width: 800px;
+      max-width: 820px;
       width: 100%;
       text-align: center;
     }
     .no-print h1 {
       font-size: 1.4rem;
       margin-bottom: 8px;
+      color: #0f172a;
     }
     .no-print p {
       font-size: 0.9rem;
-      color: #555;
-      margin-bottom: 12px;
+      color: #475569;
+      margin-bottom: 14px;
     }
     .btn {
-      background: #000;
+      background: #0284c7;
       color: #fff;
       border: none;
-      padding: 10px 20px;
+      padding: 10px 22px;
       font-size: 0.95rem;
       font-weight: bold;
       border-radius: 6px;
       cursor: pointer;
     }
     .btn:hover {
-      background: #333;
+      background: #0369a1;
     }
     .page {
-      width: 190mm;
-      min-height: 277mm;
+      width: 194mm;
+      min-height: 280mm;
       background: #fff;
-      padding: 10mm 5mm;
+      padding: 8mm 6mm;
       box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-      margin-bottom: 30px;
+      margin-bottom: 24px;
       position: relative;
     }
     .page-header {
-      font-size: 10px;
+      font-size: 9px;
+      font-weight: bold;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #777;
-      border-bottom: 1px solid #ddd;
+      letter-spacing: 1.5px;
+      color: #64748b;
+      border-bottom: 1px solid #cbd5e1;
       padding-bottom: 4px;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       display: flex;
       justify-content: space-between;
     }
     .strip-container {
       display: flex;
       flex-direction: column;
-      gap: 16mm;
+      gap: 14mm;
+    }
+    .strip-wrapper {
+      position: relative;
+    }
+    .strip-cut-hint {
+      font-size: 7.5px;
+      font-weight: bold;
+      color: #64748b;
+      margin-bottom: 2mm;
+      letter-spacing: 0.5px;
     }
     .strip {
-      width: 180mm;
+      width: 182mm;
       height: 60mm;
-      border: 1px dashed #666;
-      position: relative;
+      border: 1px dashed #475569;
       background: #fff;
       display: flex;
-    }
-    .strip-label {
-      position: absolute;
-      top: -6mm;
-      left: 0;
-      font-size: 8px;
-      color: #666;
-      font-weight: bold;
+      position: relative;
     }
     .block {
-      width: 90mm;
+      width: 91mm;
       height: 60mm;
-      border-right: 1px dashed #999;
+      border-right: 1px dashed #94a3b8;
       position: relative;
-      padding: 3mm;
+      padding: 2mm 3mm;
+      display: flex;
+      flex-direction: column;
     }
     .block:last-child {
       border-right: none;
     }
+    /* Marcadores ópticos de registro en 4 esquinas */
     .marker {
-      width: 4mm;
-      height: 4mm;
+      width: 4.5mm;
+      height: 4.5mm;
       background: #000;
       position: absolute;
+      z-index: 10;
     }
     .m-tl { top: 1mm; left: 1mm; }
     .m-tr { top: 1mm; right: 1mm; }
     .m-bl { bottom: 1mm; left: 1mm; }
     .m-br { bottom: 1mm; right: 1mm; }
-    .block-content {
-      width: 100%;
-      height: 100%;
+
+    .block-header {
       display: flex;
-      flex-direction: column;
-    }
-    .band-melodic {
-      height: 50%;
-      border-bottom: 1px dashed #333;
-      position: relative;
-    }
-    .band-rhythm {
-      height: 50%;
-      position: relative;
-    }
-    .b-tag {
-      font-size: 6.5px;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 5mm;
+      margin-bottom: 1mm;
+      font-size: 7px;
       font-weight: bold;
-      color: #444;
+    }
+    .block-title {
+      color: #0f172a;
+    }
+    .band-label {
+      font-size: 6px;
+      font-weight: bold;
+      color: #64748b;
       position: absolute;
       left: 6mm;
+      z-index: 5;
     }
-    .b-tag-top { top: 1.5mm; }
-    .b-tag-bottom { top: 1.5mm; }
-    .b-title {
-      font-size: 7.5px;
-      font-weight: bold;
-      position: absolute;
-      top: 1.5mm;
-      left: 28mm;
-      color: #000;
-    }
-    .guide-dots {
+    .band-top-label { top: 3.5mm; }
+    .band-bot-label { top: 32mm; }
+
+    /* Contenedor de la grilla de cada banda (4 filas x 16 columnas) */
+    .band {
+      height: 27mm;
       width: 100%;
-      height: 100%;
+      position: relative;
       display: grid;
       grid-template-columns: repeat(16, 1fr);
       grid-template-rows: repeat(4, 1fr);
-      padding: 4mm 5mm 2mm 5mm;
+      padding: 3mm 5mm 1mm 5mm;
     }
-    .dot {
-      width: 1.5px;
-      height: 1.5px;
-      background: #bbb;
+    .band-melodic {
+      border-bottom: 1.2px dashed #000;
+    }
+    .band-rhythm {
+      padding-top: 3.5mm;
+    }
+
+    /* Celda unitaria */
+    .cell {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Punto guía tenue para celdas vacías */
+    .guide-dot {
+      width: 1.2px;
+      height: 1.2px;
+      background: #94a3b8;
       border-radius: 50%;
-      margin: auto;
     }
-    .cell-note {
-      background: #111;
+    /* Tipos de trazos preimpresos (Alto contraste negro para la webcam) */
+    .note-trigger {
+      width: 3.2mm;
+      height: 3.2mm;
+      background: #000;
       border-radius: 50%;
-      margin: auto;
     }
-    .cell-sustain {
-      background: #111;
-      height: 3mm;
-      border-radius: 1mm;
-      margin: auto;
+    .note-rich {
+      width: 3.4mm;
+      height: 3.4mm;
+      background: #000;
+      border-radius: 0.4mm;
+    }
+    .note-sustain {
+      width: 100%;
+      height: 2.6mm;
+      background: #000;
+      border-radius: 0.8mm;
+    }
+    .note-accent {
+      width: 1.8mm;
+      height: 4.8mm;
+      background: #000;
+      border-radius: 0.4mm;
     }
 
     @media print {
@@ -193,302 +223,252 @@
 <body>
 
   <div class="no-print">
-    <h1>ROLLITO — Plantilla Imprimible (Escala 1:1)</h1>
-    <p>Ajustes de impresión recomendados: <strong>Tamaño A4</strong>, escala <strong>100% (sin ajustar a página)</strong> para preservar los 60 mm exactos de alto.</p>
+    <h1>ROLLITO — Plantillas Imprimibles (Escala 1:1)</h1>
+    <p>Ajustes de impresión: <strong>A4</strong>, escala <strong>100%</strong> (sin márgenes automáticos).<br/>
+    Los bloques 1 a 5 traen los patrones pregrabados de fábrica. Los bloques 6 a 10 son para dibujar libremente.</p>
     <button class="btn" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
   </div>
 
-  <!-- PÁGINA 1: Bloques 1 a 4 -->
+  <!-- PÁGINA 1: BLOQUES 1 A 4 -->
   <div class="page">
     <div class="page-header">
       <span>POSNETES — GRAMASYNTH ROLLITO (TIRA DE 60 MM)</span>
-      <span>HOJA 1 DE 3 — BLOQUES 01 A 04</span>
+      <span>HOJA 1 DE 3 — BLOQUES 01 A 04 (TEMPLATES)</span>
     </div>
     <div class="strip-container">
-      <!-- Tira 1: Bloque 1 y 2 -->
-      <div class="strip">
-        <span class="strip-label">✂️ CORTAR POR LA LÍNEA DE PUNTOS EXTERIOR (ALTO 60 MM)</span>
-        <!-- Bloque 1 -->
-        <div class="block">
-          <div class="marker m-tl"></div><div class="marker m-tr"></div>
-          <div class="marker m-bl"></div><div class="marker m-br"></div>
-          <div class="block-content">
-            <div class="band-melodic">
-              <span class="b-tag b-tag-top">▲ MELODÍA (30mm)</span>
-              <span class="b-title">B1: 4-ON-THE-FLOOR</span>
-              <div class="guide-dots">
-                <!-- 16 x 4 dots -->
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-            <div class="band-rhythm">
-              <span class="b-tag b-tag-bottom">▼ RITMO (30mm)</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Bloque 2 -->
-        <div class="block">
-          <div class="marker m-tl"></div><div class="marker m-tr"></div>
-          <div class="marker m-bl"></div><div class="marker m-br"></div>
-          <div class="block-content">
-            <div class="band-melodic">
-              <span class="b-tag b-tag-top">▲ MELODÍA (30mm)</span>
-              <span class="b-title">B2: SÍNCOPA & ARP</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-            <div class="band-rhythm">
-              <span class="b-tag b-tag-bottom">▼ RITMO (30mm)</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-          </div>
+      
+      <!-- Tira 1: Bloques 1 y 2 -->
+      <div class="strip-wrapper">
+        <div class="strip-cut-hint">✂️ CORTAR POR LA LÍNEA EXTERIOR (ALTO 60 MM)</div>
+        <div class="strip">
+          <div class="block" id="block-1"></div>
+          <div class="block" id="block-2"></div>
         </div>
       </div>
 
-      <!-- Tira 2: Bloque 3 y 4 -->
-      <div class="strip">
-        <span class="strip-label">✂️ CORTAR POR LA LÍNEA DE PUNTOS EXTERIOR (ALTO 60 MM)</span>
-        <!-- Bloque 3 -->
-        <div class="block">
-          <div class="marker m-tl"></div><div class="marker m-tr"></div>
-          <div class="marker m-bl"></div><div class="marker m-br"></div>
-          <div class="block-content">
-            <div class="band-melodic">
-              <span class="b-tag b-tag-top">▲ MELODÍA (30mm)</span>
-              <span class="b-title">B3: AMBIENT PADS</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-            <div class="band-rhythm">
-              <span class="b-tag b-tag-bottom">▼ RITMO (30mm)</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Bloque 4 -->
-        <div class="block">
-          <div class="marker m-tl"></div><div class="marker m-tr"></div>
-          <div class="marker m-bl"></div><div class="marker m-br"></div>
-          <div class="block-content">
-            <div class="band-melodic">
-              <span class="b-tag b-tag-top">▲ MELODÍA (30mm)</span>
-              <span class="b-title">B4: ELECTRO ACID</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-            <div class="band-rhythm">
-              <span class="b-tag b-tag-bottom">▼ RITMO (30mm)</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-          </div>
+      <!-- Tira 2: Bloques 3 y 4 -->
+      <div class="strip-wrapper">
+        <div class="strip-cut-hint">✂️ CORTAR POR LA LÍNEA EXTERIOR (ALTO 60 MM)</div>
+        <div class="strip">
+          <div class="block" id="block-3"></div>
+          <div class="block" id="block-4"></div>
         </div>
       </div>
+
     </div>
   </div>
 
-  <!-- PÁGINA 2: Bloques 5 a 8 -->
+  <!-- PÁGINA 2: BLOQUES 5 A 8 -->
   <div class="page">
     <div class="page-header">
       <span>POSNETES — GRAMASYNTH ROLLITO (TIRA DE 60 MM)</span>
       <span>HOJA 2 DE 3 — BLOQUES 05 A 08</span>
     </div>
     <div class="strip-container">
-      <!-- Tira 3: Bloque 5 y Bloque 6 (Primer Libre) -->
-      <div class="strip">
-        <span class="strip-label">✂️ CORTAR POR LA LÍNEA DE PUNTOS EXTERIOR (ALTO 60 MM)</span>
-        <!-- Bloque 5 -->
-        <div class="block">
-          <div class="marker m-tl"></div><div class="marker m-tr"></div>
-          <div class="marker m-bl"></div><div class="marker m-br"></div>
-          <div class="block-content">
-            <div class="band-melodic">
-              <span class="b-tag b-tag-top">▲ MELODÍA (30mm)</span>
-              <span class="b-title">B5: POLIRRITMIA</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-            <div class="band-rhythm">
-              <span class="b-tag b-tag-bottom">▼ RITMO (30mm)</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Bloque 6: Libre 1 -->
-        <div class="block">
-          <div class="marker m-tl"></div><div class="marker m-tr"></div>
-          <div class="marker m-bl"></div><div class="marker m-br"></div>
-          <div class="block-content">
-            <div class="band-melodic">
-              <span class="b-tag b-tag-top">▲ MELODÍA (30mm)</span>
-              <span class="b-title">B6: LIBRE 01 ✍️</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-            <div class="band-rhythm">
-              <span class="b-tag b-tag-bottom">▼ RITMO (30mm)</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-          </div>
+      
+      <!-- Tira 3: Bloque 5 (Template) y Bloque 6 (Libre) -->
+      <div class="strip-wrapper">
+        <div class="strip-cut-hint">✂️ CORTAR POR LA LÍNEA EXTERIOR (ALTO 60 MM)</div>
+        <div class="strip">
+          <div class="block" id="block-5"></div>
+          <div class="block" id="block-6"></div>
         </div>
       </div>
 
-      <!-- Tira 4: Bloque 7 y 8 (Libres) -->
-      <div class="strip">
-        <span class="strip-label">✂️ CORTAR POR LA LÍNEA DE PUNTOS EXTERIOR (ALTO 60 MM)</span>
-        <!-- Bloque 7 -->
-        <div class="block">
-          <div class="marker m-tl"></div><div class="marker m-tr"></div>
-          <div class="marker m-bl"></div><div class="marker m-br"></div>
-          <div class="block-content">
-            <div class="band-melodic">
-              <span class="b-tag b-tag-top">▲ MELODÍA (30mm)</span>
-              <span class="b-title">B7: LIBRE 02 ✍️</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-            <div class="band-rhythm">
-              <span class="b-tag b-tag-bottom">▼ RITMO (30mm)</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Bloque 8 -->
-        <div class="block">
-          <div class="marker m-tl"></div><div class="marker m-tr"></div>
-          <div class="marker m-bl"></div><div class="marker m-br"></div>
-          <div class="block-content">
-            <div class="band-melodic">
-              <span class="b-tag b-tag-top">▲ MELODÍA (30mm)</span>
-              <span class="b-title">B8: LIBRE 03 ✍️</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-            <div class="band-rhythm">
-              <span class="b-tag b-tag-bottom">▼ RITMO (30mm)</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-          </div>
+      <!-- Tira 4: Bloques 7 y 8 (Libres) -->
+      <div class="strip-wrapper">
+        <div class="strip-cut-hint">✂️ CORTAR POR LA LÍNEA EXTERIOR (ALTO 60 MM)</div>
+        <div class="strip">
+          <div class="block" id="block-7"></div>
+          <div class="block" id="block-8"></div>
         </div>
       </div>
+
     </div>
   </div>
 
-  <!-- PÁGINA 3: Bloques 9 y 10 -->
+  <!-- PÁGINA 3: BLOQUES 9 Y 10 -->
   <div class="page">
     <div class="page-header">
       <span>POSNETES — GRAMASYNTH ROLLITO (TIRA DE 60 MM)</span>
-      <span>HOJA 3 DE 3 — BLOQUES 09 Y 10</span>
+      <span>HOJA 3 DE 3 — BLOQUES 09 Y 10 (LIBRES)</span>
     </div>
     <div class="strip-container">
-      <div class="strip">
-        <span class="strip-label">✂️ CORTAR POR LA LÍNEA DE PUNTOS EXTERIOR (ALTO 60 MM)</span>
-        <!-- Bloque 9 -->
-        <div class="block">
-          <div class="marker m-tl"></div><div class="marker m-tr"></div>
-          <div class="marker m-bl"></div><div class="marker m-br"></div>
-          <div class="block-content">
-            <div class="band-melodic">
-              <span class="b-tag b-tag-top">▲ MELODÍA (30mm)</span>
-              <span class="b-title">B9: LIBRE 04 ✍️</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-            <div class="band-rhythm">
-              <span class="b-tag b-tag-bottom">▼ RITMO (30mm)</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Bloque 10 -->
-        <div class="block">
-          <div class="marker m-tl"></div><div class="marker m-tr"></div>
-          <div class="marker m-bl"></div><div class="marker m-br"></div>
-          <div class="block-content">
-            <div class="band-melodic">
-              <span class="b-tag b-tag-top">▲ MELODÍA (30mm)</span>
-              <span class="b-title">B10: LIBRE 05 ✍️</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-            <div class="band-rhythm">
-              <span class="b-tag b-tag-bottom">▼ RITMO (30mm)</span>
-              <div class="guide-dots">
-                <script>
-                  for(let i=0; i<64; i++) document.write('<div class="dot"></div>');
-                </script>
-              </div>
-            </div>
-          </div>
+      
+      <!-- Tira 5: Bloques 9 y 10 (Libres) -->
+      <div class="strip-wrapper">
+        <div class="strip-cut-hint">✂️ CORTAR POR LA LÍNEA EXTERIOR (ALTO 60 MM)</div>
+        <div class="strip">
+          <div class="block" id="block-9"></div>
+          <div class="block" id="block-10"></div>
         </div>
       </div>
+
     </div>
   </div>
 
+  <script>
+    // Definición exacta de patrones de los 10 bloques
+    const BLOCKS_DATA = {
+      1: {
+        title: "B1: 4-ON-THE-FLOOR & BASS",
+        melodic: [
+          [], // Fila 0 (C5)
+          [2, 10], // Fila 1 (A4) - trigger
+          [], // Fila 2 (G4)
+          // Fila 3 (C4 Bass) - sustain en 0,1, 4,5, 8,9, 12,13
+          [{c:0, type:'sustain'}, {c:1, type:'sustain'}, {c:4, type:'sustain'}, {c:5, type:'sustain'}, {c:8, type:'sustain'}, {c:9, type:'sustain'}, {c:12, type:'sustain'}, {c:13, type:'sustain'}]
+        ],
+        rhythm: [
+          [], // Fila 4 (Perc/OpenHat)
+          [2, 6, 10, 14], // Fila 5 (Closed Hat)
+          [4, 12], // Fila 6 (Snare)
+          [{c:0, type:'rich'}, {c:4, type:'rich'}, {c:8, type:'rich'}, {c:12, type:'rich'}] // Fila 7 (Kick)
+        ]
+      },
+      2: {
+        title: "B2: SÍNCOPA & ARPEGIO",
+        melodic: [
+          [{c:6, type:'accent'}], // Fila 0
+          [4, 8], // Fila 1
+          [2, 10, 14], // Fila 2
+          [0, 12] // Fila 3
+        ],
+        rhythm: [
+          [],
+          [2, 6, 10, 14],
+          [4, 12],
+          [{c:0, type:'rich'}, {c:3, type:'rich'}, {c:8, type:'rich'}, {c:11, type:'rich'}]
+        ]
+      },
+      3: {
+        title: "B3: AMBIENT PADS (SUSTAIN)",
+        melodic: [
+          [],
+          // Pad largo fila 1 pasos 0..7
+          [0,1,2,3,4,5,6,7].map(c => ({c, type:'sustain'})),
+          // Pad largo fila 2 pasos 8..15
+          [8,9,10,11,12,13,14,15].map(c => ({c, type:'sustain'})),
+          []
+        ],
+        rhythm: [
+          [4, 12],
+          [],
+          [],
+          [0, 8]
+        ]
+      },
+      4: {
+        title: "B4: ELECTRO ACID (ACENTOS)",
+        melodic: [
+          [{c:14, type:'accent'}],
+          [{c:10, type:'accent'}],
+          [{c:6, type:'accent'}, {c:12, type:'trigger'}],
+          [{c:0, type:'trigger'}, {c:2, type:'accent'}, {c:4, type:'trigger'}, {c:8, type:'trigger'}]
+        ],
+        rhythm: [
+          [],
+          [2, 6, 10, 14],
+          [],
+          [{c:0, type:'rich'}, {c:4, type:'rich'}, {c:8, type:'rich'}, {c:12, type:'rich'}]
+        ]
+      },
+      5: {
+        title: "B5: POLIRRITMO 3 CONTRA 4",
+        melodic: [
+          [4, 10],
+          [],
+          [{c:0, type:'sustain'}, {c:1, type:'sustain'}, {c:6, type:'sustain'}, {c:7, type:'sustain'}, {c:12, type:'sustain'}, {c:13, type:'sustain'}],
+          []
+        ],
+        rhythm: [
+          [],
+          [],
+          [0, 3, 6, 9, 12, 15], // Tresillos
+          [{c:0, type:'rich'}, {c:4, type:'rich'}, {c:8, type:'rich'}, {c:12, type:'rich'}]
+        ]
+      },
+      // Bloques Libres 6 a 10
+      6: { title: "B6: ESPACIO LIBRE 01 ✍️", isFree: true },
+      7: { title: "B7: ESPACIO LIBRE 02 ✍️", isFree: true },
+      8: { title: "B8: ESPACIO LIBRE 03 ✍️", isFree: true },
+      9: { title: "B9: ESPACIO LIBRE 04 ✍️", isFree: true },
+      10: { title: "B10: ESPACIO LIBRE 05 ✍️", isFree: true }
+    };
+
+    function renderBlock(blockId) {
+      const container = document.getElementById(`block-${blockId}`);
+      if (!container) return;
+
+      const data = BLOCKS_DATA[blockId];
+
+      let html = `
+        <div class="marker m-tl"></div><div class="marker m-tr"></div>
+        <div class="marker m-bl"></div><div class="marker m-br"></div>
+        
+        <div class="block-header">
+          <span class="block-title">${data.title}</span>
+        </div>
+
+        <span class="band-label band-top-label">▲ MELODÍA (30mm)</span>
+        <div class="band band-melodic">
+      `;
+
+      // Renderizar 4 filas x 16 cols Melódica
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 16; c++) {
+          html += renderCell(data.melodic ? data.melodic[r] : [], c, data.isFree);
+        }
+      }
+
+      html += `
+        </div>
+        <span class="band-label band-bot-label">▼ RITMO (30mm)</span>
+        <div class="band band-rhythm">
+      `;
+
+      // Renderizar 4 filas x 16 cols Rítmica
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 16; c++) {
+          html += renderCell(data.rhythm ? data.rhythm[r] : [], c, data.isFree);
+        }
+      }
+
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    function renderCell(rowNotes, col, isFree) {
+      if (isFree || !rowNotes) {
+        return `<div class="cell"><div class="guide-dot"></div></div>`;
+      }
+
+      // Buscar si esta columna tiene nota
+      let note = null;
+      for (const item of rowNotes) {
+        if (typeof item === 'number' && item === col) {
+          note = { type: 'trigger' };
+          break;
+        } else if (item && typeof item === 'object' && item.c === col) {
+          note = item;
+          break;
+        }
+      }
+
+      if (note) {
+        const cls = note.type === 'sustain' ? 'note-sustain' :
+                    note.type === 'accent' ? 'note-accent' :
+                    note.type === 'rich' ? 'note-rich' : 'note-trigger';
+        return `<div class="cell"><div class="${cls}"></div></div>`;
+      } else {
+        return `<div class="cell"><div class="guide-dot"></div></div>`;
+      }
+    }
+
+    // Inicializar renderizado de todos los bloques
+    for (let i = 1; i <= 10; i++) {
+      renderBlock(i);
+    }
+  </script>
 </body>
 </html>
