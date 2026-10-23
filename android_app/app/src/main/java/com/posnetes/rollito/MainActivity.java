@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
@@ -53,7 +54,13 @@ public class MainActivity extends Activity {
 
     private void print(boolean isRandom) {
         try {
-            Bitmap bmp = generateBitmap(isRandom);
+            Bitmap raw = generateBitmap(isRandom);
+
+            // Rotar 90° para que el largo del patrón vaya a lo largo del rollo
+            Matrix m = new Matrix();
+            m.postRotate(90);
+            Bitmap bmp = Bitmap.createBitmap(raw, 0, 0, raw.getWidth(), raw.getHeight(), m, true);
+            raw.recycle();
 
             // Guardar PNG en caché externa (legible por otras apps en Android 6)
             File outDir = getExternalCacheDir();

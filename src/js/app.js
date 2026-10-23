@@ -16,11 +16,6 @@ class App {
     this.processedCanvas = document.getElementById('processedCanvas');
     this.sequencerCanvas = document.getElementById('sequencerCanvas');
 
-    this.visionViewMode = document.getElementById('visionViewMode');
-    this.visionContainer = document.getElementById('visionContainer');
-    this.rectifiedBox = document.getElementById('rectifiedBox');
-    this.processedBox = document.getElementById('processedBox');
-
     this.statusBadge = document.getElementById('statusBadge');
     this.confidenceMeter = document.getElementById('confidenceMeter');
     this.cameraSelect = document.getElementById('cameraSelect');
@@ -35,6 +30,7 @@ class App {
 
     this.btnCapture = document.getElementById('btnCapture');
     this.btnAutoThreshold = document.getElementById('btnAutoThreshold');
+    this.rootNoteSelect = document.getElementById('rootNoteSelect');
     this.btnPlay = document.getElementById('btnPlay');
     this.btnAccept = document.getElementById('btnAccept');
     this.btnDiscard = document.getElementById('btnDiscard');
@@ -165,26 +161,13 @@ class App {
       }
     });
 
-    // Modo de vista de visión (Dual / Solo Procesado / Solo Rectificado)
-    this.visionViewMode.addEventListener('change', (e) => {
-      const mode = e.target.value;
-      if (mode === 'dual') {
-        this.visionContainer.style.display = 'grid';
-        this.visionContainer.style.gridTemplateColumns = '1fr 1fr';
-        this.rectifiedBox.style.display = 'flex';
-        this.processedBox.style.display = 'flex';
-      } else if (mode === 'processed') {
-        this.visionContainer.style.display = 'flex';
-        this.rectifiedBox.style.display = 'none';
-        this.processedBox.style.display = 'flex';
-        this.processedBox.style.width = '100%';
-      } else if (mode === 'rectified') {
-        this.visionContainer.style.display = 'flex';
-        this.rectifiedBox.style.display = 'flex';
-        this.rectifiedBox.style.width = '100%';
-        this.processedBox.style.display = 'none';
-      }
-    });
+    // Root note selector
+    if (this.rootNoteSelect) {
+      this.rootNoteSelect.addEventListener('change', (e) => {
+        const semitone = parseInt(e.target.value, 10);
+        this.audioEngine.voices && this.audioEngine.voices.setRootNote(semitone);
+      });
+    }
 
     // Audio Transport
     this.btnPlay.addEventListener('click', () => {

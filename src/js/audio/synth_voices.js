@@ -24,6 +24,14 @@ export class VoicePool {
     this.noiseBuffer = this.createNoiseBuffer();
   }
 
+  setRootNote(semitone) {
+    // Intervalos de la pentatónica mayor desde la raíz: raíz+12, +9, +7, +0
+    const intervals = [12, 9, 7, 0];
+    this.melodyFrequencies = intervals.map(i =>
+      440 * Math.pow(2, (60 + semitone + i - 69) / 12)
+    );
+  }
+
   createNoiseBuffer() {
     const bufferSize = this.ctx.sampleRate * 1.0;
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);

@@ -15,7 +15,6 @@
     </div>
     <div class="top-actions">
       <button id="btnPlay" class="btn btn-primary">▶ Iniciar</button>
-      <a href="../physical/print.html" target="_blank" class="btn" style="text-decoration:none;">🖨️ Imprimir</a>
     </div>
   </header>
 
@@ -120,6 +119,23 @@
           <label>BPM:</label>
           <input type="range" id="bpmSlider" min="50" max="180" value="110">
           <span id="bpmVal">110</span>
+        </div>
+        <div class="control-group">
+          <label>Tono:</label>
+          <select id="rootNoteSelect">
+            <option value="0">C</option>
+            <option value="1">C#</option>
+            <option value="2">D</option>
+            <option value="3">D#</option>
+            <option value="4">E</option>
+            <option value="5">F</option>
+            <option value="6">F#</option>
+            <option value="7">G</option>
+            <option value="8">G#</option>
+            <option value="9">A</option>
+            <option value="10">A#</option>
+            <option value="11">B</option>
+          </select>
         </div>
         <div class="legend">
           <span><strong style="color:#00f0ff;">■</strong> Activo</span>
