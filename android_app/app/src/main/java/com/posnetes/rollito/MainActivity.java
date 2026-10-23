@@ -126,34 +126,83 @@ public class MainActivity extends Activity {
     }
 
     private void connectAndSend(BluetoothAdapter bt, String address, boolean isRandom, boolean isTest) {
-        toast("Conectando...");
+        toast("Enviando...");
         new Thread(() -> {
-            BluetoothSocket socket = null;
             try {
-                BluetoothDevice device = bt.getRemoteDevice(address);
-                bt.cancelDiscovery();
-                socket = openSocket(device);
+                Bitmap bmp = generateBitmap(isRandom);
 
-                OutputStream out = socket.getOutputStream();
-                out.write(isTest ? makeTextTest() : makeBitmap(isRandom));
-                out.flush();
-                Thread.sleep(300);
+                // Intento 1: impresora interna PAX (A920/A930/A80 y similares)
+                if (!isTest && tryPaxPrint(bmp)) {
+                    runOnUiThread(() -> toast("✓ Impreso (PAX)"));
+                    return;
+                }
 
-                final String msg = isTest
-                        ? "Prueba enviada — ¿salió algo de la impresora?"
-                        : "✓ Enviado";
-                runOnUiThread(() -> toast(msg));
+                // Intento 2: Bluetooth SPP (impresoras externas emparejadas)
+                BluetoothSocket socket = null;
+                try {
+                    BluetoothDevice device = bt.getRemoteDevice(address);
+                    bt.cancelDiscovery();
+                    socket = openSocket(device);
+                    OutputStream out = socket.getOutputStream();
+                    out.write(isTest ? makeTextTest() : makeBitmap(isRandom));
+                    out.flush();
+                    Thread.sleep(300);
+                    final String msg = isTest
+                            ? "Prueba BT enviada — ¿salió algo?"
+                            : "✓ Enviado por Bluetooth";
+                    runOnUiThread(() -> toast(msg));
+                } finally {
+                    if (socket != null) try { socket.close(); } catch (IOException ignored) {}
+                }
 
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    toast("Error: " + e.getMessage()
-                            + "\nVerificá que la impresora esté encendida y que elegiste el dispositivo correcto.");
+                    toast("Error: " + e.getMessage());
                     prefs.edit().remove(PREF_PRINTER).apply();
                 });
-            } finally {
-                if (socket != null) try { socket.close(); } catch (IOException ignored) {}
             }
         }).start();
+    }
+
+    /**
+     * Intenta imprimir usando el SDK interno de PAX via reflexión.
+     * Funciona en PAX A920, A930, A80 y similares donde las clases del SDK
+     * están disponibles en el classpath del dispositivo sin necesitar el JAR.
+     * Retorna true si el print se inició correctamente.
+     */
+    private boolean tryPaxPrint(Bitmap bitmap) {
+        // Intento con NeptuneLite (PAX A920/A930 y modelos recientes)
+        try {
+            Class<?> nlu = Class.forName("com.pax.neptunelite.api.NeptuneLiteUser");
+            Object instance = nlu.getMethod("getInstance").invoke(null);
+            Object dal = nlu.getMethod("getDal", android.content.Context.class)
+                    .invoke(instance, this);
+            Object printer = dal.getClass().getMethod("getPrinter").invoke(dal);
+            printer.getClass().getMethod("init").invoke(printer);
+            printer.getClass().getMethod("printBitmap", Bitmap.class).invoke(printer, bitmap);
+            printer.getClass().getMethod("start").invoke(printer);
+            return true;
+        } catch (Exception ignored) {}
+
+        // Intento con POSLIB (PAX D200, S300 y modelos anteriores)
+        try {
+            Class<?> pm = Class.forName("com.paxsz.poslib.printer.PrinterManager");
+            Object instance = pm.getConstructor(android.content.Context.class).newInstance(this);
+            pm.getMethod("init").invoke(instance);
+            pm.getMethod("printBitmap", Bitmap.class).invoke(instance, bitmap);
+            pm.getMethod("start").invoke(instance);
+            return true;
+        } catch (Exception ignored) {}
+
+        // Intento con AIDL paxspmanager (acceso directo al servicio del sistema)
+        try {
+            Class<?> cls = Class.forName("com.pax.device.printer.PrinterService");
+            Object p = cls.getConstructor(android.content.Context.class).newInstance(this);
+            cls.getMethod("printBitmap", Bitmap.class).invoke(p, bitmap);
+            return true;
+        } catch (Exception ignored) {}
+
+        return false;
     }
 
     /**
