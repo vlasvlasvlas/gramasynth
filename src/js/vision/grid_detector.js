@@ -59,16 +59,15 @@ export class GridDetector {
           }
         }
 
-        const avgLum = cellLuminanceSum / (sampleW * sampleH);
-        // Umbral adaptativo: oscuro relativo al fondo del papel local
-        const localThreshold = Math.min(thresholdValue, avgLum - 15);
+        // Umbral directo gobernado por el slider del usuario (30..220)
+        const threshold = thresholdValue;
 
         for (let py = 0; py < sampleH; py++) {
           for (let px = 0; px < sampleW; px++) {
             const idx = ((sampleY + py) * this.canvas.width + (sampleX + px)) * 4;
             const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
-            // 1 si es trazo oscuro, 0 si es papel blanco
-            cellBinary[py * sampleW + px] = (lum < localThreshold) ? 1 : 0;
+            // 1 si es trazo más oscuro que el umbral, 0 si es papel blanco
+            cellBinary[py * sampleW + px] = (lum < threshold) ? 1 : 0;
           }
         }
 

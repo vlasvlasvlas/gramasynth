@@ -52,25 +52,61 @@
       </div>
     </div>
 
-    <!-- PANEL 2: RECTIFICACIÓN POR HOMOGRAFÍA & UMBRAL -->
+    <!-- PANEL 2: RECTIFICACIÓN POR HOMOGRAFÍA & VISIÓN POSTPROCESADA -->
     <div class="panel">
       <div class="panel-header">
-        <h2>🔬 Rectificación (Homografía) & Visión</h2>
-        <div id="confidenceMeter" style="font-size: 0.85rem; font-weight: bold; color: #10b981;">
-          Confianza: 100%
+        <h2>🔬 Rectificación (Homografía) & Visión Postprocesada</h2>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="control-group">
+            <label style="font-size: 0.75rem;">Vista:</label>
+            <select id="visionViewMode" style="padding: 2px 6px; font-size: 0.75rem;">
+              <option value="dual">Dual (Lado a Lado)</option>
+              <option value="processed">Solo Postprocesado</option>
+              <option value="rectified">Solo Rectificado</option>
+            </select>
+          </div>
+          <div id="confidenceMeter" style="font-size: 0.85rem; font-weight: bold; color: #10b981;">
+            Confianza: 100% (0 notas)
+          </div>
         </div>
       </div>
 
-      <!-- Canvas de 480x240 px (aspecto 2:1 correspondiente a los 96x48 mm útiles) -->
-      <canvas id="rectifiedCanvas" class="rectified-canvas" width="480" height="240"></canvas>
+      <!-- Contenedor Dual para Rectificado y Postprocesado -->
+      <div id="visionContainer" class="vision-dual-display">
+        <!-- 1. Canvas Rectificado en Color -->
+        <div id="rectifiedBox" class="vision-box">
+          <span class="vision-box-tag">1. Color Rectificado (Brillo/Contraste)</span>
+          <canvas id="rectifiedCanvas" class="rectified-canvas" width="480" height="240"></canvas>
+        </div>
 
-      <div class="controls-bar">
+        <!-- 2. Canvas Postprocesado Binarizado con Detección en Tiempo Real -->
+        <div id="processedBox" class="vision-box">
+          <span class="vision-box-tag">2. Postprocesado (Máscara Binaria + Grilla en Vivo)</span>
+          <canvas id="processedCanvas" class="rectified-canvas" width="480" height="240"></canvas>
+        </div>
+      </div>
+
+      <!-- Controles de Procesamiento de Imagen: Brillo, Contraste y Umbral -->
+      <div class="controls-bar" style="margin-top: 14px;">
+        <div class="control-group">
+          <label>Brillo:</label>
+          <input type="range" id="brightnessSlider" min="50" max="200" value="100">
+          <span id="brightnessVal">100%</span>
+        </div>
+
+        <div class="control-group">
+          <label>Contraste:</label>
+          <input type="range" id="contrastSlider" min="50" max="250" value="140">
+          <span id="contrastVal">140%</span>
+        </div>
+
         <div class="control-group">
           <label>Umbral Tinta:</label>
-          <input type="range" id="thresholdSlider" min="40" max="220" value="125">
+          <input type="range" id="thresholdSlider" min="30" max="220" value="125">
           <span id="thresholdVal">125</span>
         </div>
-        <button id="btnCapture" class="btn btn-primary">
+
+        <button id="btnCapture" class="btn btn-primary" style="margin-left: auto;">
           📸 Capturar a PREVIEW
         </button>
       </div>

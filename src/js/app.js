@@ -16,7 +16,13 @@ class App {
     this.video = document.getElementById('webcam');
     this.pinCanvas = document.getElementById('pinCanvas');
     this.rectifiedCanvas = document.getElementById('rectifiedCanvas');
+    this.processedCanvas = document.getElementById('processedCanvas');
     this.sequencerCanvas = document.getElementById('sequencerCanvas');
+
+    this.visionViewMode = document.getElementById('visionViewMode');
+    this.visionContainer = document.getElementById('visionContainer');
+    this.rectifiedBox = document.getElementById('rectifiedBox');
+    this.processedBox = document.getElementById('processedBox');
 
     this.statusBadge = document.getElementById('statusBadge');
     this.confidenceMeter = document.getElementById('confidenceMeter');
@@ -31,19 +37,29 @@ class App {
     this.btnLoadTemplate = document.getElementById('btnLoadTemplate');
     this.templateSelect = document.getElementById('templateSelect');
 
+    this.brightnessSlider = document.getElementById('brightnessSlider');
+    this.brightnessVal = document.getElementById('brightnessVal');
+    this.contrastSlider = document.getElementById('contrastSlider');
+    this.contrastVal = document.getElementById('contrastVal');
     this.thresholdSlider = document.getElementById('thresholdSlider');
     this.thresholdVal = document.getElementById('thresholdVal');
     this.bpmSlider = document.getElementById('bpmSlider');
     this.bpmVal = document.getElementById('bpmVal');
 
-    // Auxiliary canvas for raw webcam frames
+    // Canvases auxiliares
     this.rawCanvas = document.createElement('canvas');
+    this.warpCanvas = document.createElement('canvas');
+    this.warpCanvas.width = 480;
+    this.warpCanvas.height = 240;
 
     // Modules
     this.audioEngine = new AudioEngine();
     this.stateMachine = new StateMachine(this.audioEngine);
     this.cameraManager = new CameraManager(this.video);
     this.gridDetector = new GridDetector(this.rectifiedCanvas);
+
+    // Patrón detectado en vivo (último frame analizado)
+    this.liveDetectedPattern = null;
 
     // 4 Corner Pins para la homografía interactiva (normalizados 0..1)
     this.cornerPins = [
@@ -86,7 +102,7 @@ class App {
     this.setupKeyboardShortcuts();
     this.populateCameraDevices();
 
-    // Loop de render de video y homografía en tiempo real
+    // Loop de render de video, homografía y binarización en tiempo real
     requestAnimationFrame(() => this.videoProcessingLoop());
   }
 
@@ -127,6 +143,27 @@ class App {
       }
     });
 
+    // Modo de vista de visión (Dual / Solo Procesado / Solo Rectificado)
+    this.visionViewMode.addEventListener('change', (e) => {
+      const mode = e.target.value;
+      if (mode === 'dual') {
+        this.visionContainer.style.display = 'grid';
+        this.visionContainer.style.gridTemplateColumns = '1fr 1fr';
+        this.rectifiedBox.style.display = 'flex';
+        this.processedBox.style.display = 'flex';
+      } else if (mode === 'processed') {
+        this.visionContainer.style.display = 'flex';
+        this.rectifiedBox.style.display = 'none';
+        this.processedBox.style.display = 'flex';
+        this.processedBox.style.width = '100%';
+      } else if (mode === 'rectified') {
+        this.visionContainer.style.display = 'flex';
+        this.rectifiedBox.style.display = 'flex';
+        this.rectifiedBox.style.width = '100%';
+        this.processedBox.style.display = 'none';
+      }
+    });
+
     // Audio Transport
     this.btnPlay.addEventListener('click', () => {
       if (this.audioEngine.isRunning) {
@@ -164,11 +201,20 @@ class App {
       }
     });
 
-    // Sliders
+    // Sliders de Visión
+    this.brightnessSlider.addEventListener('input', (e) => {
+      this.brightnessVal.textContent = `${e.target.value}%`;
+    });
+
+    this.contrastSlider.addEventListener('input', (e) => {
+      this.contrastVal.textContent = `${e.target.value}%`;
+    });
+
     this.thresholdSlider.addEventListener('input', (e) => {
       this.thresholdVal.textContent = e.target.value;
     });
 
+    // Slider BPM
     this.bpmSlider.addEventListener('input', (e) => {
       const bpm = parseInt(e.target.value, 10);
       this.bpmVal.textContent = bpm;
@@ -193,13 +239,13 @@ class App {
   }
 
   captureToPreview() {
-    const threshold = parseInt(this.thresholdSlider.value, 10);
-    const result = this.gridDetector.detectPattern(threshold);
-
-    this.confidenceMeter.textContent = `Confianza: ${Math.round(result.confidence * 100)}% (${result.activeCellCount} notas)`;
-    this.confidenceMeter.style.color = result.isAcceptable ? '#10b981' : '#f59e0b';
-
-    this.stateMachine.setPreview(result.pattern);
+    if (this.liveDetectedPattern) {
+      this.stateMachine.setPreview(this.liveDetectedPattern.clone());
+    } else {
+      const threshold = parseInt(this.thresholdSlider.value, 10);
+      const result = this.gridDetector.detectPattern(threshold);
+      this.stateMachine.setPreview(result.pattern);
+    }
   }
 
   setupPinCanvasEvents() {
@@ -286,18 +332,140 @@ class App {
     if (this.cameraManager.stream && this.video.readyState >= 2) {
       const frameData = this.cameraManager.captureFrame(this.rawCanvas);
       if (frameData) {
-        // Puntos de esquina escalados a las dimensiones del frame crudo
+        // 1. Homografía: Rectificación perspectiva hacia warpCanvas
         const srcPoints = this.cornerPins.map(p => ({
           x: p.x * frameData.width,
           y: p.y * frameData.height
         }));
+        HomographyTransformer.warpPerspective(frameData, this.warpCanvas, srcPoints);
 
-        // Rectificación proyectiva continua hacia rectifiedCanvas
-        HomographyTransformer.warpPerspective(frameData, this.rectifiedCanvas, srcPoints);
+        // 2. Aplicar Brillo y Contraste hacia rectifiedCanvas
+        const rCtx = this.rectifiedCanvas.getContext('2d');
+        const brightness = this.brightnessSlider.value;
+        const contrast = this.contrastSlider.value;
+        rCtx.filter = `brightness(${brightness}%) contrast(${contrast}%)`;
+        rCtx.drawImage(this.warpCanvas, 0, 0);
+        rCtx.filter = 'none';
+
+        // 3. Postprocesado en tiempo real hacia processedCanvas
+        this.processBinaryAndDetection();
       }
     }
 
     requestAnimationFrame(() => this.videoProcessingLoop());
+  }
+
+  processBinaryAndDetection() {
+    const w = 480;
+    const h = 240;
+    const rCtx = this.rectifiedCanvas.getContext('2d', { willReadFrequently: true });
+    const imgData = rCtx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+
+    const pCtx = this.processedCanvas.getContext('2d');
+    const procImgData = pCtx.createImageData(w, h);
+    const pData = procImgData.data;
+
+    const threshold = parseInt(this.thresholdSlider.value, 10);
+
+    // Binarización en tiempo real
+    for (let i = 0; i < data.length; i += 4) {
+      const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      if (lum < threshold) {
+        // Tinta detectada: Blanco brillante
+        pData[i] = 255;
+        pData[i + 1] = 255;
+        pData[i + 2] = 255;
+        pData[i + 3] = 255;
+      } else {
+        // Fondo papel: Azul oscuro profundo
+        pData[i] = 12;
+        pData[i + 1] = 16;
+        pData[i + 2] = 26;
+        pData[i + 3] = 255;
+      }
+    }
+    pCtx.putImageData(procImgData, 0, 0);
+
+    // Muestreo celular en tiempo real (16x8)
+    const result = this.gridDetector.detectPattern(threshold);
+    this.liveDetectedPattern = result.pattern;
+
+    // Actualizar indicador de confianza en vivo
+    this.confidenceMeter.textContent = `Confianza: ${Math.round(result.confidence * 100)}% (${result.activeCellCount} notas)`;
+    this.confidenceMeter.style.color = result.isAcceptable ? '#10b981' : '#f59e0b';
+
+    // Dibujar superposición de celdas, guard zones y notas detectadas
+    this.drawDetectionOverlay(pCtx, result.pattern, w, h);
+  }
+
+  drawDetectionOverlay(ctx, pattern, w, h) {
+    const cols = 16;
+    const rows = 8;
+    const cellW = w / cols;
+    const cellH = h / rows;
+
+    ctx.save();
+
+    // Línea divisoria central en Y = 4 filas (Separación Melodía / Ritmo)
+    ctx.strokeStyle = '#00f0ff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, cellH * 4);
+    ctx.lineTo(w, cellH * 4);
+    ctx.stroke();
+
+    // Dibujar celdas
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const x = c * cellW;
+        const y = r * cellH;
+
+        // Borde tenue de celda
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(x, y, cellW, cellH);
+
+        // Zona de guarda interior del 60%
+        const padX = cellW * 0.20;
+        const padY = cellH * 0.20;
+        const innerW = cellW * 0.60;
+        const innerH = cellH * 0.60;
+
+        ctx.strokeStyle = 'rgba(100, 116, 139, 0.25)';
+        ctx.setLineDash([2, 2]);
+        ctx.strokeRect(x + padX, y + padY, innerW, innerH);
+        ctx.setLineDash([]);
+
+        // Si la celda está activa: resaltar y dibujar símbolo morfológico
+        const cell = pattern.cells[r][c];
+        if (cell && cell.active) {
+          // Relleno translúcido
+          ctx.fillStyle = (r < 4) ? 'rgba(0, 240, 255, 0.35)' : 'rgba(236, 72, 153, 0.35)';
+          ctx.fillRect(x + padX, y + padY, innerW, innerH);
+
+          // Borde sólido
+          ctx.strokeStyle = (r < 4) ? '#00f0ff' : '#ec4899';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(x + padX, y + padY, innerW, innerH);
+
+          // Símbolo del gesto
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 10px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+
+          let symbol = '●';
+          if (cell.type === 'sustain') symbol = '━';
+          else if (cell.type === 'accent') symbol = '┃';
+          else if (cell.type === 'rich') symbol = '■';
+
+          ctx.fillText(symbol, x + cellW / 2, y + cellH / 2);
+        }
+      }
+    }
+
+    ctx.restore();
   }
 
   async populateCameraDevices() {

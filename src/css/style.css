@@ -144,11 +144,33 @@ video {
   cursor: crosshair;
 }
 
+.vision-dual-display {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+
+.vision-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vision-box-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .rectified-canvas {
   width: 100%;
+  aspect-ratio: 2 / 1;
   border-radius: 4px;
   border: 1px solid var(--border-color);
-  background: #000;
+  background: #090b10;
 }
 
 .sequencer-panel {
