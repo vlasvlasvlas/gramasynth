@@ -8,129 +8,180 @@
 </head>
 <body>
 
+  <!-- CABECERA SUPERIOR: IDENTIDAD + ESTADO + TRANSPORTE MAESTRO -->
   <header>
     <div class="brand">
-      <h1>ROLLITO</h1>
+      <div class="brand-text">
+        <h1>ROLLITO</h1>
+        <span class="brand-sub">GRAMASYNTH</span>
+      </div>
       <span id="statusBadge" class="status-badge status-idle">IDLE</span>
     </div>
-    <div class="top-actions">
-      <span id="confidenceMeter" class="confidence-text">—</span>
-      <button id="btnCapture" class="btn btn-accept">📸 Capturar</button>
-      <button id="btnPlay" class="btn btn-primary">▶ Iniciar</button>
+
+    <!-- Transporte Maestro de Audio -->
+    <div class="master-transport">
+      <button id="btnPlay" class="btn btn-play">▶ Iniciar Audio</button>
+      <div class="tempo-control">
+        <label for="bpmSlider">BPM</label>
+        <input type="range" id="bpmSlider" min="50" max="180" value="110">
+        <span id="bpmVal" class="val-badge">110</span>
+      </div>
     </div>
   </header>
 
   <main>
 
-    <!-- COLUMNA IZQUIERDA: CÁMARA + controles de lectura -->
-    <div class="panel panel-left" id="panelCamera">
+    <!-- COLUMNA IZQUIERDA: ESCÁNER ÓPTICO Y CAPTURA -->
+    <section class="panel panel-left" id="panelCamera">
       <div class="panel-header">
-        <h2>Cámara</h2>
-        <div class="control-group">
-          <select id="cameraSelect"><option value="">Predeterminada</option></select>
+        <div class="panel-title-wrap">
+          <span class="step-num">1</span>
+          <h2>Escáner de Papel</h2>
+        </div>
+        <div class="camera-actions">
+          <select id="cameraSelect" title="Dispositivo de video"><option value="">Predeterminada</option></select>
           <button id="btnCamera" class="btn btn-primary">Activar</button>
-          <button id="btnMirror" class="btn" title="Espejo">⇄</button>
-          <button id="btnFlipV" class="btn" title="Voltear">⇅</button>
+          <button id="btnMirror" class="btn btn-icon" title="Espejo horizontal">⇄</button>
+          <button id="btnFlipV" class="btn btn-icon" title="Invertir vertical">⇅</button>
         </div>
       </div>
 
-      <!-- Viewport: video + pines + binary overlay como inset -->
-      <div class="camera-viewport">
-        <video id="webcam" playsinline autoplay muted></video>
-        <canvas id="pinCanvas" class="corner-pin-canvas"></canvas>
-        <!-- Binary inset: esquina inferior-derecha, muestra el procesado en tiempo real -->
-        <canvas id="processedCanvas" class="binary-inset" width="480" height="240"></canvas>
-        <span class="inset-label">BINARIO</span>
+      <!-- 1.1 Viewport de Video + Pines interactivos (100% despejado) -->
+      <div class="camera-box">
+        <div class="box-header">
+          <span class="box-title">ENCUADRE ÓPTICO</span>
+          <span id="cornerDetectStatus" class="status-text">Pines ajustables</span>
+        </div>
+        <div class="camera-viewport">
+          <video id="webcam" playsinline autoplay muted></video>
+          <canvas id="pinCanvas" class="corner-pin-canvas"></canvas>
+        </div>
+        <div class="box-toolbar">
+          <button id="btnAutoCorner" class="btn btn-sm btn-primary">✨ Auto-Esq.</button>
+          <button id="btnResetPins" class="btn btn-sm">↺ Centrar</button>
+          <label class="toggle-label">
+            <input type="checkbox" id="autoTrackCheck"> Seguir
+          </label>
+        </div>
       </div>
 
-      <!-- Canvas de trabajo oculto (para homografía y lectura) -->
+      <!-- Canvas de trabajo oculto (para rectificación matemática de homografía) -->
       <canvas id="rectifiedCanvas" class="offscreen-canvas" width="480" height="240"></canvas>
 
-      <div class="controls-bar">
-        <button id="btnAutoCorner" class="btn btn-primary">✨ Auto-Esq.</button>
-        <button id="btnResetPins" class="btn">↺ Centrar</button>
-        <label class="toggle-label">
-          <input type="checkbox" id="autoTrackCheck"> Seguir
-        </label>
-        <span id="cornerDetectStatus" class="status-text">Pines ajustables</span>
+      <!-- 1.2 Previsualización Digital en Vivo (Tarjeta dedicada, no inset) -->
+      <div class="preview-box">
+        <div class="box-header">
+          <span class="box-title">DETECCIÓN EN TIEMPO REAL (16×8)</span>
+          <span id="confidenceMeter" class="confidence-text">—</span>
+        </div>
+        <div class="processed-viewport">
+          <canvas id="processedCanvas" class="processed-canvas" width="480" height="240"></canvas>
+        </div>
       </div>
 
-      <div class="controls-bar controls-bar-sliders">
-        <div class="control-group">
-          <label>Brillo</label>
-          <input type="range" id="brightnessSlider" min="50" max="200" value="100">
-          <span id="brightnessVal">100%</span>
+      <!-- 1.3 BOTÓN PRINCIPAL DE CAPTURA (Directamente con la visión) -->
+      <button id="btnCapture" class="btn btn-capture">
+        <span class="capture-icon">📸</span>
+        <div class="capture-text-wrap">
+          <span class="capture-title">CAPTURAR PATRÓN</span>
+          <span class="capture-desc">Envía el fotograma actual al secuenciador</span>
         </div>
-        <div class="control-group">
-          <label>Contraste</label>
-          <input type="range" id="contrastSlider" min="50" max="250" value="140">
-          <span id="contrastVal">140%</span>
-        </div>
-        <div class="control-group">
-          <label>Umbral</label>
-          <input type="range" id="thresholdSlider" min="30" max="220" value="125">
-          <span id="thresholdVal">125</span>
-        </div>
-        <button id="btnAutoThreshold" class="btn">Auto</button>
-      </div>
-    </div>
+        <span class="badge-key">ESPACIO</span>
+      </button>
 
-    <!-- COLUMNA DERECHA: SECUENCIADOR (ocupa toda la altura) -->
-    <div class="panel panel-right sequencer-panel">
+      <!-- 1.4 Calibración de Imagen y Filtros -->
+      <div class="calibration-box">
+        <div class="box-title-sm">CALIBRACIÓN DE IMAGEN</div>
+        <div class="sliders-grid">
+          <div class="slider-field">
+            <div class="slider-head"><span>Brillo</span><span id="brightnessVal">100%</span></div>
+            <input type="range" id="brightnessSlider" min="50" max="200" value="100">
+          </div>
+          <div class="slider-field">
+            <div class="slider-head"><span>Contraste</span><span id="contrastVal">140%</span></div>
+            <input type="range" id="contrastSlider" min="50" max="250" value="140">
+          </div>
+          <div class="slider-field">
+            <div class="slider-head"><span>Umbral</span><span id="thresholdVal">125</span></div>
+            <div class="input-with-btn">
+              <input type="range" id="thresholdSlider" min="30" max="220" value="125">
+              <button id="btnAutoThreshold" class="btn btn-xs" title="Auto-umbral Otsu">Auto</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COLUMNA DERECHA: SECUENCIADOR Y MOTOR MUSICAL -->
+    <section class="panel panel-right sequencer-panel">
+      <!-- 2.1 Cabecera del Secuenciador y Selección de Instrumento -->
       <div class="panel-header">
-        <h2>Secuenciador</h2>
-        <div class="control-group">
-          <button id="btnAccept" class="btn btn-accept" disabled>✓ <span class="badge-key">ESPACIO</span></button>
-          <button id="btnDiscard" class="btn btn-action" disabled>✕ <span class="badge-key">ESC</span></button>
-          <select id="kitSelect" title="Kit de batería">
+        <div class="panel-title-wrap">
+          <span class="step-num">2</span>
+          <h2>Secuenciador Musical</h2>
+        </div>
+        <div class="sequencer-settings">
+          <select id="kitSelect" title="Kit de percusión">
             <option value="electronic">Kit: Electrónico</option>
             <option value="acoustic">Kit: Acústico</option>
             <option value="lofi">Kit: Lo-Fi</option>
-            <option value="8bit">Kit: 8bit</option>
+            <option value="8bit">Kit: 8-bit</option>
           </select>
-          <select id="templateSelect">
+          <div class="setting-item">
+            <label for="rootNoteSelect">Tono:</label>
+            <select id="rootNoteSelect" title="Tono pentatónico">
+              <option value="0">C</option>
+              <option value="1">C#</option>
+              <option value="2">D</option>
+              <option value="3">D#</option>
+              <option value="4">E</option>
+              <option value="5">F</option>
+              <option value="6">F#</option>
+              <option value="7">G</option>
+              <option value="8">G#</option>
+              <option value="9">A</option>
+              <option value="10">A#</option>
+              <option value="11">B</option>
+            </select>
+          </div>
+          <select id="templateSelect" title="Plantillas prediseñadas">
             <option value="template_01">4-on-the-floor</option>
             <option value="template_02">Síncopa</option>
             <option value="template_03">Ambient</option>
             <option value="template_04">Acid</option>
             <option value="template_05">3/4</option>
           </select>
-          <button id="btnLoadTemplate" class="btn">Cargar</button>
+          <button id="btnLoadTemplate" class="btn btn-sm">Cargar</button>
         </div>
       </div>
 
-      <canvas id="sequencerCanvas" class="sequencer-canvas" width="960" height="320"></canvas>
+      <!-- 2.2 Banner Dinámico de Candidato y Decisión -->
+      <div id="candidateBanner" class="candidate-banner state-idle">
+        <div class="banner-message">
+          <span id="bannerIcon" class="banner-icon">⏸</span>
+          <span id="bannerText" class="banner-text">Secuenciador listo. Captura un patrón de papel o inicia el audio.</span>
+        </div>
+        <div class="banner-actions">
+          <button id="btnAccept" class="btn btn-accept" disabled>✓ Aceptar <span class="badge-key">ESPACIO</span></button>
+          <button id="btnDiscard" class="btn btn-discard" disabled>✕ Descartar <span class="badge-key">ESC</span></button>
+        </div>
+      </div>
 
-      <div class="controls-bar">
-        <div class="control-group">
-          <label>BPM</label>
-          <input type="range" id="bpmSlider" min="50" max="180" value="110">
-          <span id="bpmVal">110</span>
-        </div>
-        <div class="control-group">
-          <label>Tono</label>
-          <select id="rootNoteSelect">
-            <option value="0">C</option>
-            <option value="1">C#</option>
-            <option value="2">D</option>
-            <option value="3">D#</option>
-            <option value="4">E</option>
-            <option value="5">F</option>
-            <option value="6">F#</option>
-            <option value="7">G</option>
-            <option value="8">G#</option>
-            <option value="9">A</option>
-            <option value="10">A#</option>
-            <option value="11">B</option>
-          </select>
-        </div>
+      <!-- 2.3 Grilla del Secuenciador (Ocupa toda la altura elástica) -->
+      <div class="sequencer-canvas-wrap">
+        <canvas id="sequencerCanvas" class="sequencer-canvas"></canvas>
+      </div>
+
+      <!-- 2.4 Leyenda de Colores y Notación Tangible -->
+      <div class="sequencer-footer">
         <div class="legend">
-          <span><strong style="color:#00f0ff;">■</strong> Activo</span>
-          <span><strong style="color:#ec4899;">□</strong> Próximo</span>
-          <span><strong style="color:#f59e0b;">◌</strong> Preview</span>
+          <span class="legend-item"><strong style="color:var(--accent-cyan);">■</strong> Activo</span>
+          <span class="legend-item"><strong style="color:var(--accent-magenta);">□</strong> En cola (Paso 0)</span>
+          <span class="legend-item"><strong style="color:var(--accent-amber);">◌</strong> Preview Candidato</span>
+          <span class="legend-item"><strong style="color:#ffffff;">━</strong> Legato Sostenido</span>
         </div>
       </div>
-    </div>
+    </section>
 
   </main>
 

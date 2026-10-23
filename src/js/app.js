@@ -18,6 +18,9 @@ class App {
 
     this.statusBadge = document.getElementById('statusBadge');
     this.confidenceMeter = document.getElementById('confidenceMeter');
+    this.candidateBanner = document.getElementById('candidateBanner');
+    this.bannerIcon = document.getElementById('bannerIcon');
+    this.bannerText = document.getElementById('bannerText');
     this.cameraSelect = document.getElementById('cameraSelect');
 
     this.btnCamera = document.getElementById('btnCamera');
@@ -116,6 +119,23 @@ class App {
     this.btnAccept.disabled = !fsm.preview;
     this.btnDiscard.disabled = !fsm.preview;
 
+    if (this.candidateBanner) {
+      this.candidateBanner.className = `candidate-banner state-${fsm.state.toLowerCase()}`;
+      if (fsm.state === 'PREVIEW') {
+        this.bannerIcon.textContent = '⚡';
+        this.bannerText.textContent = 'Nuevo patrón capturado — ¿Sincronizar al próximo loop?';
+      } else if (fsm.state === 'PENDING') {
+        this.bannerIcon.textContent = '⌛';
+        this.bannerText.textContent = 'Patrón en cola: entrará en el paso 0 del próximo compás.';
+      } else if (fsm.state === 'RUNNING') {
+        this.bannerIcon.textContent = '●';
+        this.bannerText.textContent = 'En reproducción continua sincronizada (16 pasos en bucle).';
+      } else {
+        this.bannerIcon.textContent = '⏸';
+        this.bannerText.textContent = 'Secuenciador listo. Captura un patrón de papel o inicia el audio.';
+      }
+    }
+
     this.sequencerView.update(
       fsm.active,
       fsm.preview,
@@ -182,11 +202,11 @@ class App {
       if (this.audioEngine.isRunning) {
         this.stateMachine.stop();
         this.btnPlay.textContent = '▶ Iniciar Audio';
-        this.btnPlay.className = 'btn btn-primary';
+        this.btnPlay.className = 'btn btn-play';
       } else {
         this.stateMachine.start(this.stateMachine.activePattern || TEMPLATES.template_01());
-        this.btnPlay.textContent = '⏹ Detener';
-        this.btnPlay.className = 'btn btn-action';
+        this.btnPlay.textContent = '⏹ Detener Audio';
+        this.btnPlay.className = 'btn btn-discard';
       }
     });
 
