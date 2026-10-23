@@ -96,21 +96,28 @@ class App {
     this.stateMachine.activePattern = initialPattern;
     this.sequencerView.update(initialPattern, null, null, -1);
 
-    // Audio Step Callback
+    // Audio Step Callback (solo actualiza la vista)
     this.audioEngine.onStepChange = (step) => {
-      // Modo Live: al inicio de cada compás (step 0) aplicar el patrón detectado
-      if (step === 0 && this.isLiveModeOn && this.liveModePending) {
-        this.stateMachine.activePattern = this.liveModePending;
-        this.stateMachine.previewPattern = null;
-        this.liveModePending = null;
-      }
-
       this.sequencerView.update(
         this.stateMachine.activePattern,
         this.stateMachine.previewPattern,
         this.stateMachine.pendingPattern,
         step
       );
+    };
+
+    // Loop Boundary: se dispara en el scheduler de audio cuando step 15→0
+    // Es el momento correcto para cambiar el patrón activo sin romper el audio
+    this.audioEngine.onLoopBoundary = () => {
+      if (this.isLiveModeOn && this.liveModePending) {
+        const p = this.liveModePending;
+        this.liveModePending = null;
+        // Actualizar AMBOS: el audio engine (para que toque las nuevas notas)
+        // y la state machine (para que la vista lo refleje)
+        this.audioEngine.updateActivePattern(p);
+        this.stateMachine.activePattern = p;
+        this.stateMachine.previewPattern = null;
+      }
     };
 
     // FSM State Listener
