@@ -22,21 +22,19 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
+      - name: Setup Gradle cache
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '7.5'
+
+      - name: Make gradlew executable
+        run: chmod +x android_app/gradlew
 
       - name: Build Debug APK
-        run: |
-          cd android_app
-          gradle assembleDebug --stacktrace
+        run: cd android_app && ./gradlew assembleDebug --stacktrace
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
 
-      - name: Copy and Rename APK
-        run: |
-          cp android_app/app/build/outputs/apk/debug/app-debug.apk ./posnetes_rollito.apk
+      - name: Copy APK
+        run: cp android_app/app/build/outputs/apk/debug/app-debug.apk ./posnetes_rollito.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -45,12 +43,18 @@ jobs:
           path: ./posnetes_rollito.apk
           if-no-files-found: error
 
-      - name: Release APK
+      - name: Delete existing release if present
+        run: gh release delete "latest-apk" --yes --cleanup-tag || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release with APK
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         with:
-          tag_name: v0.2.0-apk
+          tag_name: latest-apk
           name: "POSNETES Rollito APK (Android 6+)"
+          body: "APK debug generado automáticamente desde el último commit en main."
           files: ./posnetes_rollito.apk
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

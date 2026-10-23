@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gramasynth ROLLITO — Interfaz Físico-Digital</title>
+  <title>ROLLITO — Gramasynth</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -11,138 +11,108 @@
   <header>
     <div class="brand">
       <h1>ROLLITO</h1>
-      <span>v0.2 Ecosistema POSNETES</span>
-    </div>
-
-    <div class="top-actions">
       <span id="statusBadge" class="status-badge status-idle">IDLE</span>
-      <a href="../physical/print.html" target="_blank" class="btn" style="text-decoration:none;">
-        🖨️ Plantilla Imprimible (A4)
-      </a>
+    </div>
+    <div class="top-actions">
+      <button id="btnPlay" class="btn btn-primary">▶ Iniciar</button>
+      <a href="../physical/print.html" target="_blank" class="btn" style="text-decoration:none;">🖨️ Imprimir</a>
     </div>
   </header>
 
   <main>
-    <!-- PANEL 1: CÁMARA & ENCUADRE ÓPTICO -->
-    <div class="panel">
+
+    <!-- PANEL: CÁMARA -->
+    <div class="panel" id="panelCamera">
       <div class="panel-header">
-        <h2>📹 Cámara & Encuadre Óptico</h2>
+        <h2>Cámara</h2>
         <div class="control-group">
-          <button id="btnMirror" class="btn" title="Invertir horizontalmente">⇄ Espejo H</button>
-          <button id="btnFlipV" class="btn" title="Invertir verticalmente">⇅ Invertir V</button>
-          <button id="btnCamera" class="btn btn-primary">Activar Cámara</button>
+          <select id="cameraSelect">
+            <option value="">Predeterminada</option>
+          </select>
+          <button id="btnCamera" class="btn btn-primary">Activar</button>
+          <button id="btnMirror" class="btn" title="Espejo horizontal">⇄</button>
+          <button id="btnFlipV" class="btn" title="Invertir vertical">⇅</button>
         </div>
       </div>
 
       <div class="camera-viewport">
         <video id="webcam" playsinline autoplay muted></video>
-        <!-- Canvas superpuesto para los 4 marcadores interactivos de esquina -->
         <canvas id="pinCanvas" class="corner-pin-canvas"></canvas>
       </div>
 
       <div class="controls-bar">
-        <div class="control-group">
-          <label>Cámara:</label>
-          <select id="cameraSelect">
-            <option value="">Predeterminada</option>
-          </select>
-        </div>
-
-        <button id="btnAutoCorner" class="btn" style="background: #2563eb; color: #fff; border-color: #3b82f6;" title="Detecta los 4 marcadores negros de esquina del papel automáticamente">
-          ✨ Auto-Ajustar Esquinas
-        </button>
-
-        <button id="btnResetPins" class="btn" title="Centrar los 4 pines de encuadre">
-          ↺ Centrar
-        </button>
-
-        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; cursor: pointer; color: #94a3b8;">
+        <button id="btnAutoCorner" class="btn btn-primary">✨ Auto-Esquinas</button>
+        <button id="btnResetPins" class="btn">↺ Centrar</button>
+        <label class="toggle-label">
           <input type="checkbox" id="autoTrackCheck">
           Auto-seguir
         </label>
-
-        <span id="cornerDetectStatus" style="margin-left: auto; font-size: 0.75rem; color: #94a3b8;">
-          Pines ajustables
-        </span>
+        <span id="cornerDetectStatus" class="status-text">Pines ajustables</span>
       </div>
     </div>
 
-    <!-- PANEL 2: RECTIFICACIÓN POR HOMOGRAFÍA & VISIÓN POSTPROCESADA -->
-    <div class="panel">
+    <!-- PANEL: VISIÓN + CAPTURA -->
+    <div class="panel" id="panelVision">
       <div class="panel-header">
-        <h2>🔬 Rectificación (Homografía) & Visión Postprocesada</h2>
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div class="control-group">
-            <label style="font-size: 0.75rem;">Vista:</label>
-            <select id="visionViewMode" style="padding: 2px 6px; font-size: 0.75rem;">
-              <option value="dual">Dual (Lado a Lado)</option>
-              <option value="processed">Solo Postprocesado</option>
-              <option value="rectified">Solo Rectificado</option>
-            </select>
-          </div>
-          <div id="confidenceMeter" style="font-size: 0.85rem; font-weight: bold; color: #10b981;">
-            Confianza: 100% (0 notas)
-          </div>
+        <h2>Lectura</h2>
+        <div class="control-group">
+          <span id="confidenceMeter" class="confidence-text">—</span>
+          <button id="btnCapture" class="btn btn-primary">📸 Capturar</button>
         </div>
       </div>
 
-      <!-- Contenedor Dual para Rectificado y Postprocesado -->
-      <div id="visionContainer" class="vision-dual-display">
-        <!-- 1. Canvas Rectificado en Color -->
-        <div id="rectifiedBox" class="vision-box">
-          <span class="vision-box-tag">1. Color Rectificado (Brillo/Contraste)</span>
+      <div class="vision-dual-display">
+        <div class="vision-box">
+          <span class="vision-box-tag">Color</span>
           <canvas id="rectifiedCanvas" class="rectified-canvas" width="480" height="240"></canvas>
         </div>
-
-        <!-- 2. Canvas Postprocesado Binarizado con Detección en Tiempo Real -->
-        <div id="processedBox" class="vision-box">
-          <span class="vision-box-tag">2. Postprocesado (Máscara Binaria + Grilla en Vivo)</span>
+        <div class="vision-box">
+          <span class="vision-box-tag">Binario (notas)</span>
           <canvas id="processedCanvas" class="rectified-canvas" width="480" height="240"></canvas>
         </div>
       </div>
 
-      <!-- Controles de Procesamiento de Imagen: Brillo, Contraste y Umbral -->
-      <div class="controls-bar" style="margin-top: 14px;">
+      <div class="controls-bar">
         <div class="control-group">
-          <label>Brillo:</label>
+          <label>Brillo</label>
           <input type="range" id="brightnessSlider" min="50" max="200" value="100">
           <span id="brightnessVal">100%</span>
         </div>
-
         <div class="control-group">
-          <label>Contraste:</label>
+          <label>Contraste</label>
           <input type="range" id="contrastSlider" min="50" max="250" value="140">
           <span id="contrastVal">140%</span>
         </div>
-
         <div class="control-group">
-          <label>Umbral Tinta:</label>
+          <label>Umbral</label>
           <input type="range" id="thresholdSlider" min="30" max="220" value="125">
           <span id="thresholdVal">125</span>
         </div>
-
-        <button id="btnCapture" class="btn btn-primary" style="margin-left: auto;">
-          📸 Capturar a PREVIEW
-        </button>
+        <button id="btnAutoThreshold" class="btn">Auto-Umbral</button>
       </div>
     </div>
 
-    <!-- PANEL 3: SECUENCIADOR 16x8 INTERACTIVO & TRANSPORTE -->
+    <!-- PANEL: SECUENCIADOR -->
     <div class="panel sequencer-panel">
       <div class="panel-header">
-        <h2>🎹 Secuenciador Musical (16 Pasos × 8 Notas)</h2>
+        <h2>Secuenciador</h2>
         <div class="control-group">
-          <button id="btnPlay" class="btn btn-primary">▶ Iniciar Audio</button>
-          <button id="btnAccept" class="btn btn-accept" disabled>
-            ✓ Aceptar a PENDING <span class="badge-key">ESPACIO</span>
-          </button>
-          <button id="btnDiscard" class="btn btn-action" disabled>
-            ✕ Descartar <span class="badge-key">ESC</span>
-          </button>
+          <button id="btnAccept" class="btn btn-accept" disabled>✓ Aceptar <span class="badge-key">ESPACIO</span></button>
+          <button id="btnDiscard" class="btn btn-action" disabled>✕ Descartar <span class="badge-key">ESC</span></button>
+          <div class="control-group" style="margin-left: 16px;">
+            <label>Plantilla:</label>
+            <select id="templateSelect">
+              <option value="template_01">4-on-the-floor</option>
+              <option value="template_02">Síncopa</option>
+              <option value="template_03">Ambient</option>
+              <option value="template_04">Acid</option>
+              <option value="template_05">3/4</option>
+            </select>
+            <button id="btnLoadTemplate" class="btn">Cargar</button>
+          </div>
         </div>
       </div>
 
-      <!-- Canvas de alta resolución 960x280 px -->
       <canvas id="sequencerCanvas" class="sequencer-canvas" width="960" height="280"></canvas>
 
       <div class="controls-bar">
@@ -151,26 +121,14 @@
           <input type="range" id="bpmSlider" min="50" max="180" value="110">
           <span id="bpmVal">110</span>
         </div>
-
-        <div class="control-group">
-          <label>Plantilla Digital:</label>
-          <select id="templateSelect">
-            <option value="template_01">B1: 4-on-the-floor</option>
-            <option value="template_02">B2: Síncopa & Arp</option>
-            <option value="template_03">B3: Ambient Pads</option>
-            <option value="template_04">B4: Electro Acid</option>
-            <option value="template_05">B5: Polirritmia 3/4</option>
-          </select>
-          <button id="btnLoadTemplate" class="btn">Cargar</button>
-        </div>
-
-        <div style="margin-left: auto; font-size: 0.8rem; color: #94a3b8; display: flex; gap: 16px;">
-          <span><strong style="color: #00f0ff;">■ ACTIVE</strong> (Sonando)</span>
-          <span><strong style="color: #ec4899;">□ PENDING</strong> (Próximo compás)</span>
-          <span><strong style="color: #f59e0b;">◌ PREVIEW</strong> (Candidato congelado)</span>
+        <div class="legend">
+          <span><strong style="color:#00f0ff;">■</strong> Activo</span>
+          <span><strong style="color:#ec4899;">□</strong> Próximo</span>
+          <span><strong style="color:#f59e0b;">◌</strong> Preview</span>
         </div>
       </div>
     </div>
+
   </main>
 
   <script type="module" src="js/app.js"></script>

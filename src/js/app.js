@@ -1,7 +1,3 @@
-/**
- * Gramasynth ROLLITO — Main Application Controller
- */
-
 import { Pattern, TEMPLATES } from './core/pattern.js';
 import { AudioEngine } from './audio/audio_engine.js';
 import { StateMachine, EngineState } from './core/state_machine.js';
@@ -38,6 +34,7 @@ class App {
     this.cornerDetectStatus = document.getElementById('cornerDetectStatus');
 
     this.btnCapture = document.getElementById('btnCapture');
+    this.btnAutoThreshold = document.getElementById('btnAutoThreshold');
     this.btnPlay = document.getElementById('btnPlay');
     this.btnAccept = document.getElementById('btnAccept');
     this.btnDiscard = document.getElementById('btnDiscard');
@@ -207,6 +204,13 @@ class App {
       this.captureToPreview();
     });
 
+    // Auto-umbral por método de Otsu
+    this.btnAutoThreshold.addEventListener('click', () => {
+      const t = this.computeOtsuThreshold();
+      this.thresholdSlider.value = t;
+      this.thresholdVal.textContent = t;
+    });
+
     // Aceptar candidato
     this.btnAccept.addEventListener('click', () => {
       this.stateMachine.acceptCandidate();
@@ -322,43 +326,82 @@ class App {
     window.addEventListener('resize', resizePins);
     setTimeout(resizePins, 200);
 
-    const getMousePos = (e) => {
+    const getPosFromClient = (clientX, clientY) => {
       const rect = this.pinCanvas.getBoundingClientRect();
       return {
-        x: (e.clientX - rect.left) / rect.width,
-        y: (e.clientY - rect.top) / rect.height
+        x: (clientX - rect.left) / rect.width,
+        y: (clientY - rect.top) / rect.height
       };
     };
 
-    this.pinCanvas.addEventListener('mousedown', (e) => {
-      const pos = getMousePos(e);
-      let closestIdx = -1;
-      let minDist = 0.08;
-
-      this.cornerPins.forEach((p, idx) => {
+    const findClosestPin = (pos) => {
+      let closest = -1, minDist = 0.10;
+      this.cornerPins.forEach((p, i) => {
         const d = Math.hypot(p.x - pos.x, p.y - pos.y);
-        if (d < minDist) {
-          minDist = d;
-          closestIdx = idx;
-        }
+        if (d < minDist) { minDist = d; closest = i; }
       });
+      return closest;
+    };
 
-      if (closestIdx !== -1) {
-        this.draggedPin = closestIdx;
-      }
+    const clamp = (v) => Math.max(0.02, Math.min(0.98, v));
+
+    // Mouse
+    this.pinCanvas.addEventListener('mousedown', (e) => {
+      this.draggedPin = findClosestPin(getPosFromClient(e.clientX, e.clientY));
     });
-
     window.addEventListener('mousemove', (e) => {
       if (this.draggedPin === null) return;
-      const pos = getMousePos(e);
-      this.cornerPins[this.draggedPin].x = Math.max(0.02, Math.min(0.98, pos.x));
-      this.cornerPins[this.draggedPin].y = Math.max(0.02, Math.min(0.98, pos.y));
+      const pos = getPosFromClient(e.clientX, e.clientY);
+      this.cornerPins[this.draggedPin].x = clamp(pos.x);
+      this.cornerPins[this.draggedPin].y = clamp(pos.y);
       this.drawPins();
     });
+    window.addEventListener('mouseup', () => { this.draggedPin = null; });
 
-    window.addEventListener('mouseup', () => {
+    // Touch (mobile / tablet)
+    this.pinCanvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const t = e.touches[0];
+      this.draggedPin = findClosestPin(getPosFromClient(t.clientX, t.clientY));
+    }, { passive: false });
+    this.pinCanvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (this.draggedPin === null) return;
+      const t = e.touches[0];
+      const pos = getPosFromClient(t.clientX, t.clientY);
+      this.cornerPins[this.draggedPin].x = clamp(pos.x);
+      this.cornerPins[this.draggedPin].y = clamp(pos.y);
+      this.drawPins();
+    }, { passive: false });
+    this.pinCanvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
       this.draggedPin = null;
-    });
+    }, { passive: false });
+  }
+
+  computeOtsuThreshold() {
+    const ctx = this.rectifiedCanvas.getContext('2d', { willReadFrequently: true });
+    const { data } = ctx.getImageData(0, 0, this.rectifiedCanvas.width, this.rectifiedCanvas.height);
+    const hist = new Array(256).fill(0);
+    const total = data.length / 4;
+    for (let i = 0; i < data.length; i += 4) {
+      hist[Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2])]++;
+    }
+    let sum = 0;
+    for (let i = 0; i < 256; i++) sum += i * hist[i];
+    let sumB = 0, wB = 0, maxVar = 0, threshold = 125;
+    for (let t = 0; t < 256; t++) {
+      wB += hist[t];
+      if (!wB) continue;
+      const wF = total - wB;
+      if (!wF) break;
+      sumB += t * hist[t];
+      const mB = sumB / wB;
+      const mF = (sum - sumB) / wF;
+      const v = wB * wF * (mB - mF) ** 2;
+      if (v > maxVar) { maxVar = v; threshold = t; }
+    }
+    return threshold;
   }
 
   drawPins() {
