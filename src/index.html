@@ -26,6 +26,7 @@
         <input type="range" id="bpmSlider" min="50" max="180" value="110">
         <span id="bpmVal" class="val-badge">110</span>
       </div>
+      <button id="btnHelp" class="btn btn-help" title="Ayuda e información del proyecto">?</button>
     </div>
   </header>
 
@@ -79,15 +80,20 @@
         </div>
       </div>
 
-      <!-- 1.3 BOTÓN PRINCIPAL DE CAPTURA (Directamente con la visión) -->
-      <button id="btnCapture" class="btn btn-capture">
-        <span class="capture-icon">📸</span>
-        <div class="capture-text-wrap">
-          <span class="capture-title">CAPTURAR PATRÓN</span>
-          <span class="capture-desc">Envía el fotograma actual al secuenciador</span>
-        </div>
-        <span class="badge-key">ESPACIO</span>
-      </button>
+      <!-- 1.3 BOTÓN PRINCIPAL DE CAPTURA + MODO LIVE -->
+      <div class="capture-row">
+        <button id="btnCapture" class="btn btn-capture">
+          <span class="capture-icon">📸</span>
+          <div class="capture-text-wrap">
+            <span class="capture-title">CAPTURAR PATRÓN</span>
+            <span class="capture-desc">Envía el fotograma actual al secuenciador</span>
+          </div>
+          <span class="badge-key">ESPACIO</span>
+        </button>
+        <button id="btnLiveMode" class="btn btn-live" title="Modo en vivo: aplica el patrón detectado automáticamente en cada compás">
+          ⦿ LIVE
+        </button>
+      </div>
 
       <!-- 1.4 Calibración de Imagen y Filtros -->
       <div class="calibration-box">
@@ -184,6 +190,62 @@
     </section>
 
   </main>
+
+  <!-- MODAL DE AYUDA Y SOBRE EL PROYECTO -->
+  <div id="helpModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <h2>ROLLITO // Gramasynth</h2>
+          <span class="modal-subtitle">Ecosistema electroacústico POSNETES</span>
+        </div>
+        <button id="btnCloseHelp" class="btn btn-close" title="Cerrar modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <section class="modal-section">
+          <h3>¿Qué es este proyecto?</h3>
+          <p>
+            ROLLITO es una interfaz tangible que transforma partituras gráficas y trazos dibujados a mano sobre rollos de papel térmico (58&nbsp;mm) en música electrónica en tiempo real.
+          </p>
+          <p>
+            Mediante una cámara web y algoritmos de visión artificial, rectifica la perspectiva del papel, binariza el contraste de la tinta y mapea una matriz de <strong>16 pasos de tiempo × 8 pistas de sonido</strong> (4 melódicas y 4 de batería), sincronizándola en el compás sin cortar la música.
+          </p>
+        </section>
+
+        <section class="modal-section">
+          <h3>¿Cómo se usa?</h3>
+          <ol class="help-steps">
+            <li><strong>Encuadre:</strong> Coloca el papel bajo la cámara y mueve los 4 pines de esquina sobre los marcadores del papel (o pulsa <em>✨ Auto-Esq.</em>).</li>
+            <li><strong>Orientación:</strong> La mitad superior (Cyan) corresponde a <strong>Melodía</strong> (notas C5 a C4) y la inferior (Magenta) a <strong>Ritmo</strong> (batería). Si tu papel quedó invertido, pulsa <strong>⇅ Melodía ↕ Ritmo</strong>.</li>
+            <li><strong>Calibración:</strong> En la caja <em>Detección en tiempo real</em> verifica que tus trazos se lean como notas. Puedes ajustar los sliders de <em>Brillo</em>, <em>Contraste</em> y <em>Umbral</em>.</li>
+            <li><strong>Captura:</strong> Presiona el botón grande <strong>📸 CAPTURAR PATRÓN</strong> o toca la barra <kbd>ESPACIO</kbd>.</li>
+            <li><strong>Decisión:</strong> El patrón pasará al secuenciador en color ámbar. Presiona <strong>✓ Aceptar</strong> (<kbd>ESPACIO</kbd>) para sincronizarlo al paso 0 del próximo compás, o <strong>✕ Descartar</strong> (<kbd>ESC</kbd>).</li>
+            <li><strong>Interpretación:</strong> Puedes cambiar el tempo (BPM), el kit de batería (Electrónico, Acústico, Lo-Fi, 8-bit), la tonalidad o tocar cualquier celda con el mouse para editar en vivo.</li>
+          </ol>
+        </section>
+
+        <section class="modal-section">
+          <h3>Atajos de teclado</h3>
+          <ul class="help-shortcuts">
+            <li><span class="badge-key">ESPACIO</span> Captura el fotograma actual / Acepta el candidato si ya está en preview.</li>
+            <li><span class="badge-key">ESC</span> Descarta el candidato en preview / Cierra esta ventana.</li>
+          </ul>
+        </section>
+
+        <section class="modal-section modal-repo-section">
+          <h3>Repositorio y código fuente</h3>
+          <p>Desarrollo libre y abierto de código, esquemas de impresión térmica y aplicación Android:</p>
+          <a href="https://github.com/vlasvlasvlas/gramasynth" target="_blank" rel="noopener noreferrer" class="repo-link">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            <span>github.com/vlasvlasvlas/gramasynth</span>
+          </a>
+        </section>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="js/app.js"></script>
 </body>

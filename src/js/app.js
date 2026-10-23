@@ -21,6 +21,9 @@ class App {
     this.candidateBanner = document.getElementById('candidateBanner');
     this.bannerIcon = document.getElementById('bannerIcon');
     this.bannerText = document.getElementById('bannerText');
+    this.btnHelp = document.getElementById('btnHelp');
+    this.helpModal = document.getElementById('helpModal');
+    this.btnCloseHelp = document.getElementById('btnCloseHelp');
     this.cameraSelect = document.getElementById('cameraSelect');
 
     this.btnCamera = document.getElementById('btnCamera');
@@ -32,6 +35,7 @@ class App {
     this.cornerDetectStatus = document.getElementById('cornerDetectStatus');
 
     this.btnCapture = document.getElementById('btnCapture');
+    this.btnLiveMode = document.getElementById('btnLiveMode');
     this.btnAutoThreshold = document.getElementById('btnAutoThreshold');
     this.rootNoteSelect = document.getElementById('rootNoteSelect');
     this.btnPlay = document.getElementById('btnPlay');
@@ -64,6 +68,8 @@ class App {
 
     // Patrón detectado en vivo (último frame analizado)
     this.liveDetectedPattern = null;
+    this.liveModePending = null;   // patrón esperando ser aplicado en el próximo compás
+    this.isLiveModeOn = false;
     this.frameCount = 0;
 
     // 4 Corner Pins para la homografía interactiva (normalizados 0..1)
@@ -92,6 +98,13 @@ class App {
 
     // Audio Step Callback
     this.audioEngine.onStepChange = (step) => {
+      // Modo Live: al inicio de cada compás (step 0) aplicar el patrón detectado
+      if (step === 0 && this.isLiveModeOn && this.liveModePending) {
+        this.stateMachine.activePattern = this.liveModePending;
+        this.stateMachine.previewPattern = null;
+        this.liveModePending = null;
+      }
+
       this.sequencerView.update(
         this.stateMachine.activePattern,
         this.stateMachine.previewPattern,
@@ -221,6 +234,16 @@ class App {
       this.captureToPreview();
     });
 
+    // Modo Live: toggle — aplica el patrón detectado automáticamente en cada compás
+    if (this.btnLiveMode) {
+      this.btnLiveMode.addEventListener('click', () => {
+        this.isLiveModeOn = !this.isLiveModeOn;
+        this.btnLiveMode.classList.toggle('live-active', this.isLiveModeOn);
+        this.btnLiveMode.textContent = this.isLiveModeOn ? '⦿ LIVE' : '⦿ LIVE';
+        if (!this.isLiveModeOn) this.liveModePending = null;
+      });
+    }
+
     // Auto-umbral por método de Otsu
     this.btnAutoThreshold.addEventListener('click', () => {
       const t = this.computeOtsuThreshold();
@@ -266,11 +289,32 @@ class App {
       this.bpmVal.textContent = bpm;
       this.stateMachine.setBpm(bpm);
     });
+
+    // Modal de Ayuda / Información
+    if (this.btnHelp && this.helpModal) {
+      this.btnHelp.addEventListener('click', () => {
+        this.helpModal.style.display = 'flex';
+      });
+
+      if (this.btnCloseHelp) {
+        this.btnCloseHelp.addEventListener('click', () => {
+          this.helpModal.style.display = 'none';
+        });
+      }
+
+      this.helpModal.addEventListener('click', (e) => {
+        if (e.target === this.helpModal) {
+          this.helpModal.style.display = 'none';
+        }
+      });
+    }
   }
 
   setupKeyboardShortcuts() {
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space') {
+        // Si el modal está abierto, no capturar
+        if (this.helpModal && this.helpModal.style.display !== 'none') return;
         e.preventDefault();
         if (this.stateMachine.previewPattern) {
           this.stateMachine.acceptCandidate();
@@ -279,7 +323,11 @@ class App {
         }
       } else if (e.code === 'Escape') {
         e.preventDefault();
-        this.stateMachine.discardCandidate();
+        if (this.helpModal && this.helpModal.style.display !== 'none') {
+          this.helpModal.style.display = 'none';
+        } else {
+          this.stateMachine.discardCandidate();
+        }
       }
     });
   }
@@ -649,8 +697,18 @@ class App {
     this.liveDetectedPattern = result.pattern;
 
     // Actualizar indicador de confianza en vivo
-    this.confidenceMeter.textContent = `Confianza: ${Math.round(result.confidence * 100)}% (${result.activeCellCount} notas)`;
-    this.confidenceMeter.style.color = result.isAcceptable ? '#10b981' : '#f59e0b';
+    const pct = Math.round(result.confidence * 100);
+    if (this.isLiveModeOn) {
+      this.confidenceMeter.textContent = `⦿ LIVE — ${pct}% (${result.activeCellCount} notas)`;
+      this.confidenceMeter.style.color = '#ec4899';
+      // Acumular candidato si la confianza es aceptable
+      if (result.isAcceptable) {
+        this.liveModePending = result.pattern.clone();
+      }
+    } else {
+      this.confidenceMeter.textContent = `Confianza: ${pct}% (${result.activeCellCount} notas)`;
+      this.confidenceMeter.style.color = result.isAcceptable ? '#10b981' : '#f59e0b';
+    }
 
     // Dibujar superposición de celdas, guard zones y notas detectadas
     this.drawDetectionOverlay(pCtx, result.pattern, w, h);
