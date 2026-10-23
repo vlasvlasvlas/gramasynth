@@ -156,14 +156,20 @@ class App {
       }
     });
 
-    // Inversión Horizontal (Espejo)
+    // Inversión Horizontal (Paso 0 <-> 15)
     this.btnMirror.addEventListener('click', () => {
       this.cameraManager.toggleMirror();
+      this.btnMirror.classList.toggle('btn-primary', this.cameraManager.isMirrored);
+      this.drawPins();
+      this.cornerDetectStatus.textContent = this.cameraManager.isMirrored ? "⇄ Espejo activo" : "⇄ Normal";
     });
 
-    // Inversión Vertical
+    // Inversión Vertical (Melodía <-> Ritmo)
     this.btnFlipV.addEventListener('click', () => {
       this.cameraManager.toggleFlipV();
+      this.btnFlipV.classList.toggle('btn-primary', this.cameraManager.isFlippedV);
+      this.drawPins();
+      this.cornerDetectStatus.textContent = this.cameraManager.isFlippedV ? "⇅ Ritmo arriba / Melodía abajo" : "⇅ Melodía arriba / Ritmo abajo";
     });
 
     // Auto-ajuste de esquinas
@@ -423,7 +429,35 @@ class App {
 
     const points = this.cornerPins.map(p => ({ x: p.x * w, y: p.y * h }));
 
-    // Polígono de delimitación de la zona de dibujo
+    // Puntos medios de la línea central
+    const midLeftX = (points[0].x + points[3].x) / 2;
+    const midLeftY = (points[0].y + points[3].y) / 2;
+    const midRightX = (points[1].x + points[2].x) / 2;
+    const midRightY = (points[1].y + points[2].y) / 2;
+
+    const isFlippedV = this.cameraManager ? this.cameraManager.isFlippedV : false;
+
+    // 1. ZONA SUPERIOR (Tintado translúcido)
+    ctx.fillStyle = isFlippedV ? 'rgba(236, 72, 153, 0.09)' : 'rgba(0, 240, 255, 0.09)';
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    ctx.lineTo(points[1].x, points[1].y);
+    ctx.lineTo(midRightX, midRightY);
+    ctx.lineTo(midLeftX, midLeftY);
+    ctx.closePath();
+    ctx.fill();
+
+    // 2. ZONA INFERIOR (Tintado translúcido)
+    ctx.fillStyle = isFlippedV ? 'rgba(0, 240, 255, 0.09)' : 'rgba(236, 72, 153, 0.09)';
+    ctx.beginPath();
+    ctx.moveTo(midLeftX, midLeftY);
+    ctx.lineTo(midRightX, midRightY);
+    ctx.lineTo(points[2].x, points[2].y);
+    ctx.lineTo(points[3].x, points[3].y);
+    ctx.closePath();
+    ctx.fill();
+
+    // 3. Polígono de delimitación de la zona de dibujo
     ctx.strokeStyle = '#00f0ff';
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
@@ -434,24 +468,43 @@ class App {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Línea guía central (división melódica / rítmica de 3cm)
-    const midLeftX = (points[0].x + points[3].x) / 2;
-    const midLeftY = (points[0].y + points[3].y) / 2;
-    const midRightX = (points[1].x + points[2].x) / 2;
-    const midRightY = (points[1].y + points[2].y) / 2;
-
-    ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([2, 2]);
+    // 4. Línea guía central (división melódica / rítmica de 3cm)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 3]);
     ctx.beginPath();
     ctx.moveTo(midLeftX, midLeftY);
     ctx.lineTo(midRightX, midRightY);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Dibujar los 4 pines de esquina interactivos
-    const pinNames = ['TL', 'TR', 'BR', 'BL'];
+    // 5. Etiquetas HUD de Orientación de Bandas (ARRIBA vs ABAJO)
+    const topCenterX = (points[0].x + points[1].x + midRightX + midLeftX) / 4;
+    const topCenterY = (points[0].y + points[1].y + midRightY + midLeftY) / 4;
+    const btmCenterX = (midLeftX + midRightX + points[2].x + points[3].x) / 4;
+    const btmCenterY = (midLeftY + midRightY + points[2].y + points[3].y) / 4;
+
+    const topLabel = isFlippedV ? '▼ RITMO (Perc · Hat · Caja · Bombo)' : '▲ MELODÍA (C5 · A4 · G4 · C4)';
+    const topColor = isFlippedV ? '#ec4899' : '#00f0ff';
+    const btmLabel = isFlippedV ? '▲ MELODÍA (C5 · A4 · G4 · C4)' : '▼ RITMO (Perc · Hat · Caja · Bombo)';
+    const btmColor = isFlippedV ? '#00f0ff' : '#ec4899';
+
+    this.drawHUDTag(ctx, topLabel, topCenterX, topCenterY, topColor);
+    this.drawHUDTag(ctx, btmLabel, btmCenterX, btmCenterY, btmColor);
+
+    // 6. Flecha indicadora de dirección de tiempo (Paso 0 -> Paso 15)
+    ctx.font = 'bold 9px monospace';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+    ctx.textAlign = 'left';
+    ctx.fillText('PASO 0 ▶', points[0].x + 4, points[0].y - 6);
+    ctx.textAlign = 'right';
+    ctx.fillText('◀ PASO 15', points[1].x - 4, points[1].y - 6);
+
+    // 7. Pines interactivos con badges legibles
     const colors = ['#10b981', '#38bdf8', '#f59e0b', '#ec4899'];
+    const pinLabels = isFlippedV
+      ? ['P0 · Kick', 'P15 · Kick', 'P15 · Lead', 'P0 · Lead']
+      : ['P0 · Lead', 'P15 · Lead', 'P15 · Kick', 'P0 · Kick'];
 
     points.forEach((p, i) => {
       // Círculo exterior
@@ -474,7 +527,45 @@ class App {
       ctx.moveTo(p.x, p.y - 4);
       ctx.lineTo(p.x, p.y + 4);
       ctx.stroke();
+
+      // Badge con nombre del pin
+      ctx.font = 'bold 8px monospace';
+      const text = pinLabels[i];
+      const tw = ctx.measureText(text).width + 6;
+      const tx = (i === 0 || i === 3) ? p.x + 12 : p.x - tw - 12;
+      const ty = p.y - 4;
+
+      ctx.fillStyle = 'rgba(10, 14, 23, 0.88)';
+      ctx.fillRect(tx, ty - 6, tw, 13);
+      ctx.strokeStyle = colors[i];
+      ctx.lineWidth = 1;
+      ctx.strokeRect(tx, ty - 6, tw, 13);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, tx + 3, ty);
     });
+  }
+
+  drawHUDTag(ctx, text, cx, cy, color) {
+    ctx.save();
+    ctx.font = 'bold 9px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(text).width + 12;
+    const th = 16;
+
+    ctx.fillStyle = 'rgba(10, 14, 23, 0.82)';
+    ctx.fillRect(cx - tw / 2, cy - th / 2, tw, th);
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(cx - tw / 2, cy - th / 2, tw, th);
+
+    ctx.fillStyle = color;
+    ctx.fillText(text, cx, cy);
+    ctx.restore();
   }
 
   videoProcessingLoop() {
@@ -630,6 +721,25 @@ class App {
         }
       }
     }
+
+    // Etiquetas de pistas (Tracks) en el margen izquierdo
+    const rowLabels = ['C5', 'A4', 'G4', 'C4', 'OH', 'CH', 'SD', 'BD'];
+    for (let r = 0; r < rows; r++) {
+      ctx.fillStyle = (r < 4) ? 'rgba(0, 240, 255, 0.85)' : 'rgba(236, 72, 153, 0.85)';
+      ctx.font = 'bold 8px monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(rowLabels[r], 2, r * cellH + cellH / 2);
+    }
+
+    // Marcas de sección en el margen derecho
+    ctx.font = 'bold 8px monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = 'rgba(0, 240, 255, 0.45)';
+    ctx.fillText('▲ MELODÍA', w - 4, 3);
+    ctx.fillStyle = 'rgba(236, 72, 153, 0.45)';
+    ctx.fillText('▼ RITMO', w - 4, cellH * 4 + 3);
 
     ctx.restore();
   }
