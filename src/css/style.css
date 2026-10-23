@@ -62,10 +62,12 @@ header {
 main {
   flex: 1;
   min-height: 0;
+  height: 0;          /* fuerza el flex:1 a limitar la altura */
   display: grid;
   grid-template-columns: 360px 1fr;
   gap: 10px;
   padding: 10px;
+  overflow: hidden;
 }
 
 /* ── PANELS ───────────────────────────────────────────── */
@@ -78,11 +80,10 @@ main {
   gap: 8px;
   padding: 10px;
   min-height: 0;
+  height: 100%;     /* ocupa toda la altura de la celda del grid */
   overflow: hidden;
+  box-sizing: border-box;
 }
-
-.panel-left  { overflow: visible; }
-.panel-right { }
 
 .panel-header {
   flex-shrink: 0;
@@ -110,6 +111,7 @@ main {
   width: 100%;
   flex: 1;
   min-height: 0;
+  height: 0;       /* con flex:1 esto fuerza que tome solo el espacio disponible */
   background: #000;
   border-radius: 6px;
   overflow: hidden;
@@ -172,8 +174,9 @@ video {
 
 .sequencer-canvas {
   width: 100%;
-  flex: 1;
-  min-height: 0;
+  height: auto;
+  aspect-ratio: 960 / 320;   /* evita el stretch vertical de la tipografía */
+  flex-shrink: 0;
   border-radius: 6px;
   border: 1px solid var(--border-color);
   cursor: pointer;
